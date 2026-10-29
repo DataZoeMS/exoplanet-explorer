@@ -160,16 +160,31 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
         </div>
         <div className="distance-body">
           <figure className="distance-figure">
-            <div className="distance-legend" role="group" aria-labelledby="comparison-legend-title">
-              <div className="distance-legend-heading"><h3 id="comparison-legend-title">Chart legend</h3><span>Sun radius = 1 / Earth radius = 1</span></div>
-              <ul className="comparison-key">
-                {Object.entries(quadrantLabels).map(([key, label]) => <li key={key}>
-                  <span className="comparison-swatch comparison-color" data-quadrant={key} aria-hidden="true" />{label}
-                </li>)}
-                <li><span className="comparison-reference-key" aria-hidden="true" />Earth / Sun reference</li>
-                <li><span className="comparison-selection-key" aria-hidden="true" />Selected planet</li>
-              </ul>
-              <p className="distance-angle-key">Both axes use log ratios: twice and half the reference radius are equally far from the center. Each dot is one planet-host pair; dot size is constant.</p>
+            <div className="distance-inspector">
+              <p className="eyebrow">A SYSTEM IN PERSPECTIVE</p>
+              <div aria-live="polite" aria-atomic="true">
+                {selected ? <>
+                  <h3><a className="planet-name-link" href={selected.planet.scienceUrl} target="_blank" rel="noopener noreferrer" title="Opens in a new tab"
+                    aria-label={`${selected.planet.scienceName} - NASA Science (opens in a new tab)`}>{selected.planet.name}<ArrowUpRightRegular aria-hidden="true" /></a></h3>
+                  <p className="comparison-host">Host: {selected.planet.hostName}</p>
+                  <dl>
+                    <div><dt>Host star radius</dt><dd>{decimal.format(selected.planet.starRadiusSun)} <span>Sun radii</span></dd></div>
+                    <div><dt>Planet radius</dt><dd>{decimal.format(selected.planet.radiusEarth)} <span>Earth radii</span></dd></div>
+                  </dl>
+                  <p className="comparison-category">{quadrantLabels[selected.quadrant]}</p>
+                  <div className="distance-source-links">
+                    <a className="text-link" href={selected.planet.scienceUrl} target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Science <ArrowUpRightRegular aria-hidden="true" /></a>
+                    <a className="text-link" href={`https://exoplanetarchive.ipac.caltech.edu/cgi-bin/DisplayOverview/nph-DisplayOverview?objname=${encodeURIComponent(selected.planet.name)}&type=CONFIRMED_PLANET`}
+                      target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Archive data <ArrowUpRightRegular aria-hidden="true" /></a>
+                  </div>
+                </> : <div className="distance-no-results"><h3>No systems in view.</h3><p>{matching.length ? 'Zoom out or reset the axes to see matching planets.' : 'Try a different name or choose all quadrants.'}</p></div>}
+              </div>
+              <div className="distance-browse">
+                <Button appearance="outline" icon={<ArrowLeftRegular />} disabled={visible.length < 2} aria-label="Previous planet by star radius" onClick={() => step(-1)} />
+                <span>{visible.length ? `${number.format(selectedIndex + 1)} / ${number.format(visible.length)}` : '0 results'}</span>
+                <Button appearance="outline" icon={<ArrowRightRegular />} disabled={visible.length < 2} aria-label="Next planet by star radius" onClick={() => step(1)} />
+              </div>
+              <p className="distance-browse-note">Browse planets in view by increasing star radius, then planet radius. Zoom out to include more pairs.</p>
             </div>
             <p className="distance-count" role="status">{number.format(visible.length)} in view / {number.format(matching.length)} matching / {number.format(planets.length)} comparable planets <span>/</span> independent axis zoom</p>
             <p className="comparison-scroll-hint">Scroll the plot sideways to see every quadrant.</p>
@@ -270,32 +285,17 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
             </Tooltip>
             <figcaption className="distance-caption">Hover a dot for size and orbit details. Focus the plot to preview the selected planet, or focus Earth/Sun for our reference values; press Escape to dismiss.</figcaption>
           </figure>
-          <aside className="distance-sidebar" aria-label="Selected size comparison and chart notes">
-            <div className="distance-inspector">
-              <p className="eyebrow">A SYSTEM IN PERSPECTIVE</p>
-              <div aria-live="polite" aria-atomic="true">
-                {selected ? <>
-                  <h3><a className="planet-name-link" href={selected.planet.scienceUrl} target="_blank" rel="noopener noreferrer" title="Opens in a new tab"
-                    aria-label={`${selected.planet.scienceName} - NASA Science (opens in a new tab)`}>{selected.planet.name}<ArrowUpRightRegular aria-hidden="true" /></a></h3>
-                  <p className="comparison-host">Host: {selected.planet.hostName}</p>
-                  <dl>
-                    <div><dt>Host star radius</dt><dd>{decimal.format(selected.planet.starRadiusSun)} <span>Sun radii</span></dd></div>
-                    <div><dt>Planet radius</dt><dd>{decimal.format(selected.planet.radiusEarth)} <span>Earth radii</span></dd></div>
-                  </dl>
-                  <p className="comparison-category">{quadrantLabels[selected.quadrant]}</p>
-                  <div className="distance-source-links">
-                    <a className="text-link" href={selected.planet.scienceUrl} target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Science <ArrowUpRightRegular aria-hidden="true" /></a>
-                    <a className="text-link" href={`https://exoplanetarchive.ipac.caltech.edu/cgi-bin/DisplayOverview/nph-DisplayOverview?objname=${encodeURIComponent(selected.planet.name)}&type=CONFIRMED_PLANET`}
-                      target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Archive data <ArrowUpRightRegular aria-hidden="true" /></a>
-                  </div>
-                </> : <div className="distance-no-results"><h3>No systems in view.</h3><p>{matching.length ? 'Zoom out or reset the axes to see matching planets.' : 'Try a different name or choose all quadrants.'}</p></div>}
-              </div>
-              <div className="distance-browse">
-                <Button appearance="outline" icon={<ArrowLeftRegular />} disabled={visible.length < 2} aria-label="Previous planet by star radius" onClick={() => step(-1)} />
-                <span>{visible.length ? `${number.format(selectedIndex + 1)} / ${number.format(visible.length)}` : '0 results'}</span>
-                <Button appearance="outline" icon={<ArrowRightRegular />} disabled={visible.length < 2} aria-label="Next planet by star radius" onClick={() => step(1)} />
-              </div>
-              <p className="distance-browse-note">Browse planets in view by increasing star radius, then planet radius. Zoom out to include more pairs.</p>
+          <aside className="distance-sidebar" aria-label="Size comparison legend and chart notes">
+            <div className="distance-legend" role="group" aria-labelledby="comparison-legend-title">
+              <div className="distance-legend-heading"><h3 id="comparison-legend-title">Chart legend</h3><span>Sun radius = 1 / Earth radius = 1</span></div>
+              <ul className="comparison-key">
+                {Object.entries(quadrantLabels).map(([key, label]) => <li key={key}>
+                  <span className="comparison-swatch comparison-color" data-quadrant={key} aria-hidden="true" />{label}
+                </li>)}
+                <li><span className="comparison-reference-key" aria-hidden="true" />Earth / Sun reference</li>
+                <li><span className="comparison-selection-key" aria-hidden="true" />Selected planet</li>
+              </ul>
+              <p className="distance-angle-key">Both axes use log ratios: twice and half the reference radius are equally far from the center. Each dot is one planet-host pair; dot size is constant.</p>
             </div>
             <div id="comparison-notes" className="distance-reading-notes">
               <h3>Earth and the Sun are the origin.</h3>
