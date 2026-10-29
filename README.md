@@ -15,6 +15,8 @@ Open the localhost URL printed by Vite. The page supports light and dark themes,
 
 Page-layout styles for `.app-shell` are scoped to the provider directly inside `#root`. Fluent UI copies provider classes to tooltip and dialog portal containers; applying the page's full-height background to those containers can cover the landing page.
 
+The supplied eight-color palette is defined by `--cp-color-1` through `--cp-color-8` in `src/styles.css`: `#65A4F8`, `#72D2F1`, `#818CF7`, `#BD80F8`, `#E479CC`, `#F09066`, `#E1C964`, and `#ED7479`. Blue is the primary button and plot color; coral marks selected planets, and the remaining colors appear in decorative planets and discovery-method bars. Text accents use contrast-adjusted blue variants in light and dark themes. Illustration colors do not encode physical planet characteristics; discovery-method colors cycle after eight entries, with labels identifying each method.
+
 ```powershell
 npm test
 npm run build

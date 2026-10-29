@@ -17,19 +17,20 @@
 .distance-symbol-key svg { flex: 0 0 28px; width: 28px; height: 24px; }
 .legend-earth-halo, .legend-selected-halo { fill: var(--cp-bg-elevated); stroke: var(--cp-text); stroke-width: 1; }
 .legend-earth-dot { fill: var(--cp-text); }
-.legend-planet-dot { fill: var(--cp-accent); fill-opacity: .3; stroke: var(--cp-accent); stroke-width: .4; stroke-opacity: .4; }
-.legend-selected-dot { fill: var(--cp-accent); }
+.legend-planet-dot { fill: var(--cp-color-1); fill-opacity: .6; stroke: var(--cp-accent); stroke-width: .6; }
+.legend-selected-dot { fill: var(--cp-color-8); }
 .legend-distance-band { fill: none; stroke: var(--cp-border-strong); stroke-width: 1; stroke-dasharray: 3 4; }
 .distance-size-key { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; border-top: 1px solid var(--cp-border); padding-top: 12px; }
 .distance-size-key > span { font-size: 11px; font-weight: 600; }
-.distance-size-key svg { display: block; width: 240px; max-width: 100%; fill: var(--cp-accent); }
+.distance-size-key svg { display: block; width: 240px; max-width: 100%; fill: var(--cp-color-1); }
+.distance-size-key svg circle { stroke: var(--cp-accent); stroke-width: .6; }
 .distance-size-key svg text { fill: var(--cp-text-muted); font-size: 10px; }
 .distance-size-key p { flex: 1 1 180px; font-size: 10px; color: var(--cp-text-muted); line-height: 1.8; margin: 0; }
 .distance-size-key strong { font-weight: 600; }
 .distance-angle-key { font-size: 10px; color: var(--cp-text-muted); margin: 12px 0 0; line-height: 1.8; }
 .planet-hover-card.fui-Tooltip__content { background: var(--cp-surface); color: var(--cp-text); border: 1px solid var(--cp-border-strong); border-radius: 16px; padding: 20px; width: 280px; max-width: calc(100vw - 32px); box-shadow: 0 4px 16px var(--cp-highlight); }
 .planet-hover-heading { display: flex; align-items: center; gap: 12px; }
-.planet-hover-orb { display: block; flex: 0 0 32px; width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 25% 25%, var(--cp-accent-soft), var(--cp-accent) 60%, var(--cp-text)); }
+.planet-hover-orb { display: block; flex: 0 0 32px; width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 25% 25%, var(--cp-color-2), var(--cp-color-1) 60%, var(--cp-ink)); }
 .planet-hover-heading strong { display: block; font-size: 18px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
 .planet-hover-kicker { font-size: 8px; letter-spacing: 1px; color: var(--cp-accent); }
 .planet-hover-values { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0 16px; }
@@ -45,11 +46,11 @@
 .distance-wedge { fill: var(--cp-accent-soft); }
 .distance-grid { stroke: var(--cp-border-strong); stroke-width: .8; fill: none; opacity: .6; }
 .distance-grid > path:not(:last-child) { stroke-dasharray: 3 6; }
-.distance-point { fill: var(--cp-accent); fill-opacity: .3; stroke: var(--cp-accent); stroke-width: .4; stroke-opacity: .4; cursor: pointer; }
+.distance-point { fill: var(--cp-color-1); fill-opacity: .6; stroke: var(--cp-accent); stroke-width: .6; cursor: pointer; }
 .distance-point:hover { fill-opacity: 1; stroke: var(--cp-text); stroke-opacity: 1; stroke-width: 1.5; }
 .distance-selected line { stroke: var(--cp-text-soft); stroke-width: 1; stroke-dasharray: 4 5; }
 .selection-halo { fill: var(--cp-bg-elevated); stroke: var(--cp-text); stroke-width: 1.2; }
-.selection-point { fill: var(--cp-accent); stroke: var(--cp-bg-elevated); stroke-width: .6; }
+.selection-point { fill: var(--cp-color-8); stroke: var(--cp-bg-elevated); stroke-width: .6; }
 .distance-axis-labels { fill: var(--cp-text-muted); font-family: Consolas, "Courier New", Courier, monospace; font-size: 12px; }
 .distance-axis-labels > text { font-size: 10px; letter-spacing: 1px; }
 .distance-size-axis { fill: var(--cp-accent); font-size: 10px; font-weight: 600; letter-spacing: 1px; }

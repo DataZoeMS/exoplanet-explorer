@@ -81,9 +81,9 @@ function App() {
   }, [dark]);
   const theme: Theme = {
     ...(dark ? webDarkTheme : webLightTheme),
-    colorBrandBackground: 'var(--cp-accent)',
-    colorBrandBackgroundHover: 'var(--cp-accent-hover)',
-    colorBrandBackgroundPressed: 'var(--cp-accent-hover)',
+    colorBrandBackground: 'var(--cp-brand)',
+    colorBrandBackgroundHover: 'var(--cp-brand-hover)',
+    colorBrandBackgroundPressed: 'var(--cp-brand-hover)',
     colorNeutralForegroundOnBrand: 'var(--cp-accent-fg)',
     colorBrandForeground1: 'var(--cp-accent)',
     colorCompoundBrandStroke: 'var(--cp-accent)',
