@@ -50,6 +50,8 @@ Planet-name links, the chart's selection panel, and featured detail dialogs link
 
 Planet radius (`pl_rade`) is in Earth radii, host-star radius (`st_rad`) in Sun radii, and orbital period in days. Distance is converted from parsecs to light-years using 1 pc = 3.26156 light-years. Null measurements display as "Not available." Rounded composite values can combine different publications; archive links provide uncertainties, measurement methods, and scientific references. Decorative planets are CSS illustrations, not NASA imagery or observations.
 
+Size-comparison tooltips also show orbital radius (`pl_orbsmax`) in astronomical units (AU) and orbital period (`pl_orbper`) in days. Orbital radius means the catalog's semi-major axis, not instantaneous planet-star separation; 1 AU is approximately the Earth-Sun distance. Missing orbital measurements display as "Not available" without excluding otherwise valid size comparisons or inferring values from other measurements.
+
 Data attribution: [NASA Exoplanet Archive acknowledgment guidelines](https://exoplanetarchive.ipac.caltech.edu/docs/acknowledge.html). The archive is operated by the California Institute of Technology under contract with NASA under the Exoplanet Exploration Program. This independent site is not affiliated with or endorsed by NASA.
 
 ## Quarter-circle distance chart

@@ -41,6 +41,8 @@
 .comparison-axis-hit { fill: transparent; pointer-events: all; }
 .comparison-axis-zoom:hover .comparison-axis-hit { fill: var(--cp-accent-soft); }
 .comparison-empty { font-size: 12px; }
+.planet-hover-values dd.comparison-orbit-value { font-size: 18px; }
+.planet-hover-values dd.comparison-missing { font-size: 14px; letter-spacing: 0; }
 
 html[data-theme="dark"] .comparison-section { --cp-text-muted: var(--cp-text-soft); }
 

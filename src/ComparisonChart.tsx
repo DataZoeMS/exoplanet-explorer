@@ -9,7 +9,10 @@ import {
 import { usePlanetTooltip } from './usePlanetTooltip';
 import './comparison-chart.css';
 
-type CatalogPlanet = ComparisonPlanet & { scienceName: string; scienceUrl: string };
+type CatalogPlanet = ComparisonPlanet & {
+  scienceName: string; scienceUrl: string;
+  orbitalRadiusAu: number | null; orbitalPeriodDays: number | null;
+};
 type Props = { planets: CatalogPlanet[]; totalPlanets: number; date: string };
 const number = new Intl.NumberFormat('en-US');
 const decimal = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 3 });
@@ -179,6 +182,12 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                   <dl className="planet-hover-values">
                     <div><dt>Star radius</dt><dd>{decimal.format(hovered.planet.starRadiusSun)}<span>Sun radii</span></dd></div>
                     <div><dt>Planet radius</dt><dd>{decimal.format(hovered.planet.radiusEarth)}<span>Earth radii</span></dd></div>
+                    <div><dt>Orbital radius</dt><dd className={hovered.planet.orbitalRadiusAu === null ? 'comparison-missing' : 'comparison-orbit-value'}>
+                      {hovered.planet.orbitalRadiusAu === null ? 'Not available' : decimal.format(hovered.planet.orbitalRadiusAu)}<span>AU (semi-major axis)</span>
+                    </dd></div>
+                    <div><dt>Orbital period</dt><dd className={hovered.planet.orbitalPeriodDays === null ? 'comparison-missing' : 'comparison-orbit-value'}>
+                      {hovered.planet.orbitalPeriodDays === null ? 'Not available' : decimal.format(hovered.planet.orbitalPeriodDays)}<span>days</span>
+                    </dd></div>
                   </dl>
                   <p className="planet-hover-note">{quadrantLabels[quadrantFor(hovered.planet)]}.<br />Catalog radii may be measured or estimated. Select the dot for NASA links.</p>
                 </>,

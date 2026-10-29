@@ -7,7 +7,7 @@ const rows = featuredNames.map((name, i) => ({
   pl_name: name, hostname: i < 2 ? 'Shared star' : `Star ${i}`,
   discoverymethod: i < 4 ? 'Transit' : 'Radial Velocity',
   disc_year: 2000 + i, pl_rade: i === 0 ? null : 1,
-  pl_orbper: 10, sy_dist: 20, st_rad: i === 2 ? null : 0.5,
+  pl_orbsmax: 0.03, pl_orbper: 10, sy_dist: 20, st_rad: i === 2 ? null : 0.5,
 }));
 const date = '2026-10-29T00:00:00.000Z';
 
@@ -49,10 +49,29 @@ test('rejects empty, duplicate, malformed and incomplete responses', () => {
     rows.map(row => ({ ...row, st_rad: 0 })),
     rows.map(row => ({ ...row, st_rad: -1 })),
     rows.map(row => ({ ...row, st_rad: '1' })),
+    rows.map(row => ({ ...row, pl_orbsmax: 0 })),
+    rows.map(row => ({ ...row, pl_orbsmax: -1 })),
+    rows.map(row => ({ ...row, pl_orbsmax: '1' })),
+    rows.map(({ pl_orbsmax, ...row }) => row),
+    rows.map(row => ({ ...row, pl_orbper: Infinity })),
     rows.map(({ st_rad, ...row }) => row),
     rows.map(row => ({ ...row, discoverymethod: '' }))]) {
     assert.throws(() => summarize(invalid, date));
   }
+});
+
+test('comparison orbital measurements retain NASA units and nullable coverage', () => {
+  const result = summarize(rows.map((row, i) => ({
+    ...row, pl_orbsmax: i === 1 ? null : row.pl_orbsmax,
+    pl_orbper: i === 3 ? null : row.pl_orbper,
+  })), date);
+  assert.equal(result.comparison.length, 4);
+  const missingRadius = result.comparison.find(planet => planet.name === featuredNames[1]);
+  assert.equal(missingRadius.orbitalRadiusAu, null);
+  assert.equal(missingRadius.orbitalPeriodDays, 10);
+  const missingPeriod = result.comparison.find(planet => planet.name === featuredNames[3]);
+  assert.equal(missingPeriod.orbitalRadiusAu, 0.03);
+  assert.equal(missingPeriod.orbitalPeriodDays, null);
 });
 
 test('committed snapshot totals and featured records are internally consistent', async () => {
@@ -81,6 +100,11 @@ test('committed snapshot totals and featured records are internally consistent',
     && (i === 0 || planet.distanceLy >= snapshot.plot[i - 1].distanceLy)));
   assert.ok(snapshot.comparison.length > snapshot.featured.length && snapshot.comparison.length <= snapshot.totalPlanets);
   assert.equal(new Set(snapshot.comparison.map(planet => planet.name)).size, snapshot.comparison.length);
+  for (const planet of snapshot.comparison) {
+    for (const field of ['orbitalRadiusAu', 'orbitalPeriodDays']) {
+      assert.ok(planet[field] === null || (Number.isFinite(planet[field]) && planet[field] > 0));
+    }
+  }
   assert.ok(snapshot.comparison.every((planet, i) => planet.starRadiusSun > 0 && planet.radiusEarth > 0
     && planet.hostName && (i === 0 || planet.starRadiusSun >= snapshot.comparison[i - 1].starRadiusSun)));
   for (let i = 1; i < snapshot.comparison.length; i++) {
@@ -105,6 +129,8 @@ test('committed snapshot totals and featured records are internally consistent',
       assert.equal(point.starRadiusSun, featured.st_rad);
       assert.equal(point.radiusEarth, featured.pl_rade);
       assert.equal(point.hostName, featured.hostname);
+      assert.equal(point.orbitalRadiusAu, featured.pl_orbsmax);
+      assert.equal(point.orbitalPeriodDays, featured.pl_orbper);
       assert.equal(point.scienceUrl, featured.scienceUrl);
     }
   }
