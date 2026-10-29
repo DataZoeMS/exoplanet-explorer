@@ -13,6 +13,11 @@ type CatalogPlanet = ComparisonPlanet & {
   scienceName: string; scienceUrl: string;
   orbitalRadiusAu: number | null; orbitalPeriodDays: number | null;
 };
+type TooltipPlanet = Omit<CatalogPlanet, 'scienceName' | 'scienceUrl'>;
+const earthSunReference: TooltipPlanet = {
+  name: 'Earth', hostName: 'Sun', starRadiusSun: 1, radiusEarth: 1,
+  orbitalRadiusAu: 1, orbitalPeriodDays: 365.25,
+};
 type Props = { planets: CatalogPlanet[]; totalPlanets: number; date: string };
 const number = new Intl.NumberFormat('en-US');
 const decimal = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 3 });
@@ -33,7 +38,7 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
   const [zoom, setZoom] = useState<ComparisonZoom>({ star: 0, planet: 0 });
   const svgRef = useRef<SVGSVGElement>(null);
   const wheelDelta = useRef({ star: 0, planet: 0 });
-  const { hovered, cancelHide, dismissTooltip, scheduleHide, showTooltip } = usePlanetTooltip<CatalogPlanet>();
+  const { hovered, cancelHide, dismissTooltip, scheduleHide, showTooltip } = usePlanetTooltip<TooltipPlanet>();
   const fullBounds = useMemo(() => comparisonBounds(planets), [planets]);
   const bounds = useMemo(() => zoomComparisonBounds(fullBounds, zoom), [fullBounds, zoom]);
   const catalog = useMemo(() => planets.map(planet => ({
@@ -176,7 +181,8 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                 onPointerEnter: cancelHide, onPointerLeave: scheduleHide,
                 children: hovered && <>
                   <div className="planet-hover-heading"><span className="planet-hover-orb" aria-hidden="true" /><div>
-                    <span className="planet-hover-kicker">PLANET + HOST STAR</span><strong>{hovered.planet.name}</strong>
+                    <span className="planet-hover-kicker">{hovered.planet === earthSunReference ? 'OUR SOLAR SYSTEM' : 'PLANET + HOST STAR'}</span>
+                    <strong>{hovered.planet === earthSunReference ? 'Earth / Sun' : hovered.planet.name}</strong>
                   </div></div>
                   <p className="comparison-host">Host: {hovered.planet.hostName}</p>
                   <dl className="planet-hover-values">
@@ -189,7 +195,9 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                       {hovered.planet.orbitalPeriodDays === null ? 'Not available' : decimal.format(hovered.planet.orbitalPeriodDays)}<span>days</span>
                     </dd></div>
                   </dl>
-                  <p className="planet-hover-note">{quadrantLabels[quadrantFor(hovered.planet)]}.<br />Catalog radii may be measured or estimated. Select the dot for NASA links.</p>
+                  <p className="planet-hover-note">{hovered.planet === earthSunReference
+                    ? 'Earth/Sun is the (1, 1) size reference. Orbital measurements are approximate.'
+                    : <>{quadrantLabels[quadrantFor(hovered.planet)]}.<br />Catalog radii may be measured or estimated. Select the dot for NASA links.</>}</p>
                 </>,
               }}>
               <div className="distance-stage comparison-stage" tabIndex={0} role="region" aria-label="Scrollable Earth and Sun size comparison"
@@ -242,8 +250,14 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                     </g>
                   </g>
                   <g className="comparison-earth" pointerEvents="none">
-                    <circle className="selection-halo" cx={chart.originX} cy={chart.originY} r="11" />
-                    <path d={`M ${chart.originX} ${chart.originY - 6} l 6 6 -6 6 -6 -6 Z`} />
+                    <g className="comparison-earth-marker" pointerEvents="all" tabIndex={0} role="img"
+                      aria-label="Earth and Sun reference" aria-describedby="comparison-planet-tooltip"
+                      onPointerEnter={event => showTooltip(earthSunReference, event.currentTarget)} onPointerLeave={scheduleHide}
+                      onFocus={event => showTooltip(earthSunReference, event.currentTarget)} onBlur={dismissTooltip}>
+                      <circle className="comparison-reference-hit" cx={chart.originX} cy={chart.originY} r="16" />
+                      <circle className="selection-halo" cx={chart.originX} cy={chart.originY} r="11" />
+                      <path d={`M ${chart.originX} ${chart.originY - 6} l 6 6 -6 6 -6 -6 Z`} />
+                    </g>
                     <text x={chart.originX + 16} y={chart.originY + 27}>EARTH / SUN (1&times;, 1&times;)</text>
                   </g>
                   {/* Keep selection visible when a pair overlaps the Earth/Sun marker. */}
@@ -254,7 +268,7 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                 </svg>
               </div>
             </Tooltip>
-            <figcaption className="distance-caption">Hover a dot for its two radii; select it for details. Focus the plot to preview the selected planet; press Escape to dismiss.</figcaption>
+            <figcaption className="distance-caption">Hover a dot for size and orbit details. Focus the plot to preview the selected planet, or focus Earth/Sun for our reference values; press Escape to dismiss.</figcaption>
           </figure>
           <aside className="distance-sidebar" aria-label="Selected size comparison and chart notes">
             <div className="distance-inspector">

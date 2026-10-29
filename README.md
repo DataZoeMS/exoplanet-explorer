@@ -52,6 +52,8 @@ Planet radius (`pl_rade`) is in Earth radii, host-star radius (`st_rad`) in Sun 
 
 Size-comparison tooltips also show orbital radius (`pl_orbsmax`) in astronomical units (AU) and orbital period (`pl_orbper`) in days. Orbital radius means the catalog's semi-major axis, not instantaneous planet-star separation; 1 AU is approximately the Earth-Sun distance. Missing orbital measurements display as "Not available" without excluding otherwise valid size comparisons or inferring values from other measurements.
 
+Hover or keyboard-focus the Earth/Sun diamond to see the same measurements for our reference: 1 Sun radius, 1 Earth radius, approximately 1 AU, and approximately 365 days. This reference tooltip remains available regardless of filters or axis zoom, does not change the selected exoplanet or catalog counts, and supports the same hover transfer and Escape dismissal as planet tooltips.
+
 Data attribution: [NASA Exoplanet Archive acknowledgment guidelines](https://exoplanetarchive.ipac.caltech.edu/docs/acknowledge.html). The archive is operated by the California Institute of Technology under contract with NASA under the Exoplanet Exploration Program. This independent site is not affiliated with or endorsed by NASA.
 
 ## Quarter-circle distance chart

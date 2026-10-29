@@ -22,6 +22,10 @@
 .comparison-axis-labels { fill: var(--cp-text-muted); font-family: Consolas, "Courier New", Courier, monospace; font-size: 12px; }
 .comparison-axis-title { font-size: 12px; letter-spacing: 1px; }
 .comparison-earth { fill: var(--cp-text); }
+.comparison-earth-marker { cursor: help; }
+.comparison-reference-hit { fill: transparent; }
+.comparison-earth-marker:focus-visible { outline: none; }
+.comparison-earth-marker:focus-visible .comparison-reference-hit { stroke: var(--cp-accent); stroke-width: 2; }
 .comparison-earth text { font-size: 11px; font-weight: 650; letter-spacing: .3px; paint-order: stroke; stroke: var(--cp-bg-elevated); stroke-width: 4; stroke-linejoin: round; }
 .comparison-host { font-size: 11px; color: var(--cp-text-muted); overflow-wrap: anywhere; }
 .comparison-section .distance-inspector .comparison-host { margin: -10px 0 24px; }
