@@ -205,14 +205,14 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
               <p className="eyebrow">A WORLD IN PERSPECTIVE</p>
               <div aria-live="polite" aria-atomic="true">
                 {selected ? <>
-                  <h3><a className="planet-name-link" href={selected.scienceUrl} aria-label={`${selected.scienceName} - NASA Science`}>{selected.name}<ArrowUpRightRegular aria-hidden="true" /></a></h3>
+                  <h3><a className="planet-name-link" href={selected.scienceUrl} target="_blank" rel="noopener noreferrer" title="Opens in a new tab" aria-label={`${selected.scienceName} - NASA Science (opens in a new tab)`}>{selected.name}<ArrowUpRightRegular aria-hidden="true" /></a></h3>
                   <dl>
                     <div><dt>Distance from Earth</dt><dd>{decimal.format(selected.distanceLy)} <span>light-years</span></dd></div>
                     <div><dt>Catalog planet radius</dt><dd>{decimal.format(selected.radiusEarth)} <span>Earth radii</span></dd></div>
                   </dl>
                   <div className="distance-source-links">
-                    <a className="text-link" href={selected.scienceUrl}>NASA Science <ArrowUpRightRegular aria-hidden="true" /></a>
-                    <a className="text-link" href={`https://exoplanetarchive.ipac.caltech.edu/cgi-bin/DisplayOverview/nph-DisplayOverview?objname=${encodeURIComponent(selected.name)}&type=CONFIRMED_PLANET`}>NASA Archive data <ArrowUpRightRegular aria-hidden="true" /></a>
+                    <a className="text-link" href={selected.scienceUrl} target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Science <ArrowUpRightRegular aria-hidden="true" /></a>
+                    <a className="text-link" href={`https://exoplanetarchive.ipac.caltech.edu/cgi-bin/DisplayOverview/nph-DisplayOverview?objname=${encodeURIComponent(selected.name)}&type=CONFIRMED_PLANET`} target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Archive data <ArrowUpRightRegular aria-hidden="true" /></a>
                   </div>
                 </> : <div className="distance-no-results"><h3>No matching worlds.</h3><p>Try a different name or a wider distance range.</p></div>}
               </div>

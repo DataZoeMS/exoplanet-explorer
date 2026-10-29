@@ -64,8 +64,8 @@ function PlanetDetails({ planet, date }: { planet: Planet; date: string }) {
             <p className="detail-note">Rounded composite catalog values, retrieved {date}. Values can come from different studies; see the archive for uncertainties, measurement methods, and original references. Illustrations are not observations.</p>
           </DialogContent>
           <DialogActions>
-            <Button as="a" href={planet.scienceUrl} appearance="primary" icon={<ArrowUpRightRegular />} iconPosition="after" aria-label={`${planet.scienceName} - NASA Science`}>NASA Science</Button>
-            <Button as="a" href={overview(planet)} appearance="outline" icon={<ArrowUpRightRegular />} iconPosition="after" aria-label={`${planet.pl_name} - NASA Exoplanet Archive`}>Archive data</Button>
+            <Button as="a" href={planet.scienceUrl} target="_blank" rel="noopener noreferrer" title="Opens in a new tab" appearance="primary" icon={<ArrowUpRightRegular />} iconPosition="after" aria-label={`${planet.scienceName} - NASA Science (opens in a new tab)`}>NASA Science</Button>
+            <Button as="a" href={overview(planet)} target="_blank" rel="noopener noreferrer" title="Opens in a new tab" appearance="outline" icon={<ArrowUpRightRegular />} iconPosition="after" aria-label={`${planet.pl_name} - NASA Exoplanet Archive (opens in a new tab)`}>Archive data</Button>
           </DialogActions>
         </DialogBody>
       </DialogSurface>
@@ -139,7 +139,7 @@ function App() {
             <p className="hero-description">Thousands discovered. Countless still out there. Get to know the planets beyond our solar system, and the science that brings them a little closer.</p>
             <div className="hero-actions">
               <Button as="a" href="#distance" appearance="primary" size="large" icon={<ArrowRightRegular />} iconPosition="after">Start exploring</Button>
-              <a className="text-link" href="https://science.nasa.gov/exoplanets/">What is an exoplanet? <ArrowUpRightRegular aria-hidden="true" /></a>
+              <a className="text-link" href="https://science.nasa.gov/exoplanets/" target="_blank" rel="noopener noreferrer" title="Opens in a new tab">What is an exoplanet? <ArrowUpRightRegular aria-hidden="true" /></a>
             </div>
             <p className="hero-note">Real discoveries. Open data. An extraordinary universe.</p>
           </div>
@@ -158,7 +158,7 @@ function App() {
         <section className="stats-section page-width" aria-labelledby="stats-title">
           <div className="section-topline">
             <h2 id="stats-title" className="eyebrow">THE DISCOVERIES SO FAR</h2>
-            <a className="source-link" href={data.source}>NASA Archive snapshot <span aria-hidden="true">/</span> <time dateTime={data.retrievedAt}>{date}</time> <ArrowUpRightRegular aria-hidden="true" /></a>
+            <a className="source-link" href={data.source} target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Archive snapshot <span aria-hidden="true">/</span> <time dateTime={data.retrievedAt}>{date}</time> <ArrowUpRightRegular aria-hidden="true" /></a>
           </div>
           <div className="stats-grid">
             <div className="stat"><strong>{number.format(data.totalPlanets)}</strong><span>Confirmed exoplanets</span><p>Worlds beyond our solar system</p></div>
@@ -166,7 +166,7 @@ function App() {
             <div className="stat"><strong>{data.methods.length}</strong><span>Discovery methods</span><p>Different ways to find another world</p></div>
             <div className="stat stat-perspective"><strong>One</strong><span>Shared sense of wonder</span><p>And so much left to discover</p></div>
           </div>
-          {ageDays > 30 && <p className="data-notice" role="note">This snapshot is over 30 days old. Visit the <a href={archive}>NASA Exoplanet Archive</a> for the latest counts.</p>}
+          {ageDays > 30 && <p className="data-notice" role="note">This snapshot is over 30 days old. Visit the <a href={archive} target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Exoplanet Archive</a> for the latest counts.</p>}
         </section>
 
         <DistanceChart planets={data.plot} totalPlanets={data.totalPlanets} date={date} />
@@ -193,7 +193,7 @@ function App() {
                 </div>
                 <div className="planet-card-body">
                   <div className="card-kicker">{descriptions[planet.pl_name].label}</div>
-                  <h3><a className="planet-name-link" href={planet.scienceUrl} aria-label={`${planet.scienceName} - NASA Science`}>{planet.pl_name}<ArrowUpRightRegular aria-hidden="true" /></a></h3>
+                  <h3><a className="planet-name-link" href={planet.scienceUrl} target="_blank" rel="noopener noreferrer" title="Opens in a new tab" aria-label={`${planet.scienceName} - NASA Science (opens in a new tab)`}>{planet.pl_name}<ArrowUpRightRegular aria-hidden="true" /></a></h3>
                   <p>{descriptions[planet.pl_name].text}</p>
                   <div className="planet-card-footer">
                     <Badge appearance="tint" color="subtle">{planet.discoverymethod}</Badge>
@@ -203,14 +203,14 @@ function App() {
               </article>
             ))}
           </div>
-          <div className="catalog-link"><span>This is just the beginning.</span><a className="text-link" href="https://science.nasa.gov/exoplanets/exoplanet-catalog/">Explore NASA's planet catalog <ArrowUpRightRegular aria-hidden="true" /></a></div>
+          <div className="catalog-link"><span>This is just the beginning.</span><a className="text-link" href="https://science.nasa.gov/exoplanets/exoplanet-catalog/" target="_blank" rel="noopener noreferrer" title="Opens in a new tab">Explore NASA's planet catalog <ArrowUpRightRegular aria-hidden="true" /></a></div>
         </section>
 
         <section id="science" className="science-section" aria-labelledby="science-title">
           <div className="page-width science-layout">
             <div className="science-copy"><p className="eyebrow">SMALL SIGNALS. BIG DISCOVERIES.</p><h2 id="science-title">How do you find<br />a distant world?</h2>
               <p>Most exoplanets are too faint to see directly. Instead, scientists look for the clues they leave behind: a dip in starlight, a gentle stellar wobble, or a bend in light.</p>
-              <Button as="a" href="https://science.nasa.gov/exoplanets/how-we-find-and-characterize/" appearance="outline" icon={<ArrowUpRightRegular />} iconPosition="after">Discover the methods</Button>
+              <Button as="a" href="https://science.nasa.gov/exoplanets/how-we-find-and-characterize/" target="_blank" rel="noopener noreferrer" title="Opens in a new tab" appearance="outline" icon={<ArrowUpRightRegular />} iconPosition="after">Discover the methods</Button>
               <aside className="science-note"><strong>A note on perspective</strong><p>What we find depends on how we look. Transits favor planets whose orbits cross our view of their star. These counts reflect discovery biases, not the true mix of planets in the universe.</p></aside>
             </div>
             <div className="methods-panel">
@@ -230,7 +230,7 @@ function App() {
         <section id="resources" className="resources-section page-width" aria-labelledby="resources-title">
           <div className="section-heading"><div><p className="eyebrow">KEEP YOUR CURIOSITY GOING</p><h2 id="resources-title">Your next small step.</h2><p>Go straight to the source with these NASA resources.</p></div><span className="resource-aside">Good questions lead to great journeys. <ArrowUpRightRegular aria-hidden="true" /></span></div>
           <div className="resource-grid">
-            {resources.map(resource => <a className="resource-card" key={resource.url} href={resource.url}>
+            {resources.map(resource => <a className="resource-card" key={resource.url} href={resource.url} target="_blank" rel="noopener noreferrer" title="Opens in a new tab">
               <div className="resource-top"><span className="eyebrow">{resource.category}</span><ArrowUpRightRegular aria-hidden="true" /></div>
               <h3>{resource.title}</h3><p>{resource.text}</p><span className="resource-tag">{resource.tag}</span>
             </a>)}
@@ -240,7 +240,7 @@ function App() {
       </main>
       <footer className="site-footer page-width">
         <div><a className="footer-brand" href="#">exoplanet explorer</a><p>An independent exploration of NASA's open science.<br />Not affiliated with or endorsed by NASA.</p></div>
-        <div className="footer-data"><a href={archive}>NASA Exoplanet Archive <ArrowUpRightRegular aria-hidden="true" /></a><p>Composite catalog snapshot, not live data. Confirmed planets only.<br /><time dateTime={data.retrievedAt}>Retrieved {date} (UTC)</time>. <a href="https://exoplanetarchive.ipac.caltech.edu/docs/acknowledge.html">Data attribution</a></p></div>
+        <div className="footer-data"><a href={archive} target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Exoplanet Archive <ArrowUpRightRegular aria-hidden="true" /></a><p>Composite catalog snapshot, not live data. Confirmed planets only.<br /><time dateTime={data.retrievedAt}>Retrieved {date} (UTC)</time>. <a href="https://exoplanetarchive.ipac.caltech.edu/docs/acknowledge.html" target="_blank" rel="noopener noreferrer" title="Opens in a new tab">Data attribution</a></p></div>
       </footer>
 
     </FluentProvider>

@@ -44,7 +44,7 @@ The refresh requests NASA's public TAP JSON endpoint and the NASA Science exopla
 
 Every featured and plotted planet includes a verified NASA Science catalog URL and display name. The refresh reads all pages of `https://science.nasa.gov/wp-json/wp/v2/exoplanet` and joins archive names to the catalog's `acf.exo_id` (spaces become underscores), retaining NASA's canonical `link`. It does not guess URL slugs: for example, archive name `51 Peg b` maps to `51-pegasi-b`, not `51-peg-b`. Missing or ambiguous identities, incomplete pagination, and invalid link destinations fail the refresh without replacing the snapshot. `scienceCatalog` records that source, its retrieval date, and catalog size.
 
-Planet-name links, the chart's selection panel, and featured detail dialogs link to NASA Science. Archive data links remain available alongside them for scientific measurements and references.
+Planet-name links, the chart's selection panel, and featured detail dialogs link to NASA Science. Archive data links remain available alongside them for scientific measurements and references. All external NASA links open in a new tab/window (depending on browser settings) with `noopener noreferrer`; in-page navigation stays in the current tab.
 
 Planet radius is in Earth radii; orbital period is in days. Distance is converted from parsecs to light-years using 1 pc = 3.26156 light-years. Null measurements display as "Not available." Rounded composite values can combine different publications; archive links provide uncertainties, measurement methods, and scientific references. Decorative planets are CSS illustrations, not NASA imagery or observations.
 
