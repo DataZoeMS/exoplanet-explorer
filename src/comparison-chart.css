@@ -1,0 +1,36 @@
+.comparison-color { --cp-comparison-color: var(--cp-color-1); }
+.comparison-color[data-quadrant="smaller-star-larger-planet"] { --cp-comparison-color: var(--cp-color-2); }
+.comparison-color[data-quadrant="larger-star-larger-planet"] { --cp-comparison-color: var(--cp-color-4); }
+.comparison-color[data-quadrant="smaller-star-smaller-planet"] { --cp-comparison-color: var(--cp-color-3); }
+.comparison-color[data-quadrant="larger-star-smaller-planet"] { --cp-comparison-color: var(--cp-color-6); }
+.comparison-key { display: flex; flex-wrap: wrap; gap: 10px 20px; list-style: none; padding: 0; margin: 16px 0 0; }
+.comparison-key li { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--cp-text-muted); }
+.comparison-swatch, .comparison-reference-key, .comparison-selection-key { display: inline-block; flex: 0 0 9px; width: 9px; height: 9px; border: 1px solid var(--cp-text-soft); border-radius: 50%; }
+.comparison-swatch { background: var(--cp-comparison-color); }
+.comparison-reference-key { background: var(--cp-text); border-color: var(--cp-text); border-radius: 0; transform: rotate(45deg); }
+.comparison-selection-key { background: var(--cp-color-8); border-color: var(--cp-text); box-shadow: 0 0 0 2px var(--cp-bg-elevated), 0 0 0 3px var(--cp-text); margin-inline: 3px; }
+.comparison-svg { display: block; width: 100%; max-width: 760px; height: auto; margin-inline: auto; }
+.comparison-quadrant { fill: var(--cp-comparison-color); fill-opacity: .07; }
+.comparison-grid { stroke: var(--cp-border-strong); stroke-width: .6; stroke-dasharray: 3 6; opacity: .5; }
+.comparison-frame { fill: none; stroke: var(--cp-border-strong); stroke-width: .8; }
+.comparison-reference-axis { stroke: var(--cp-text-soft); stroke-width: 1.2; }
+.comparison-point { fill: var(--cp-comparison-color); fill-opacity: .6; stroke: var(--cp-accent); stroke-width: .4; stroke-opacity: .65; cursor: pointer; }
+.comparison-point:hover { fill-opacity: 1; stroke: var(--cp-text); stroke-opacity: 1; stroke-width: 1.5; }
+.comparison-selected line { stroke: var(--cp-text-soft); stroke-width: 1; stroke-dasharray: 4 5; }
+.comparison-selection-ring { fill: none; stroke: var(--cp-color-8); stroke-width: 2; }
+.comparison-quadrant-labels { fill: var(--cp-text-muted); font-size: 12px; font-weight: 600; letter-spacing: 1px; }
+.comparison-axis-labels { fill: var(--cp-text-muted); font-family: Consolas, "Courier New", Courier, monospace; font-size: 12px; }
+.comparison-axis-title { font-size: 12px; letter-spacing: 1px; }
+.comparison-earth { fill: var(--cp-text); }
+.comparison-earth text { font-size: 11px; font-weight: 650; letter-spacing: .3px; paint-order: stroke; stroke: var(--cp-bg-elevated); stroke-width: 4; stroke-linejoin: round; }
+.comparison-host { font-size: 11px; color: var(--cp-text-muted); overflow-wrap: anywhere; }
+.comparison-section .distance-inspector .comparison-host { margin: -10px 0 24px; }
+.comparison-category { font-size: 11px; color: var(--cp-accent); padding: 10px 0; border-top: 1px solid var(--cp-border); margin: 0 0 16px; }
+.comparison-scroll-hint { display: none; color: var(--cp-text-soft); font-size: 10px; margin: 8px 12px 0; }
+
+html[data-theme="dark"] .comparison-section { --cp-text-muted: var(--cp-text-soft); }
+
+@media (max-width: 600px) {
+  .comparison-svg { min-width: 600px; }
+  .comparison-scroll-hint { display: block; }
+}

@@ -10,13 +10,16 @@ test('joins archive identities to canonical NASA pages, not guessed slugs', () =
   const pages = indexSciencePages([entry('51_Peg_b', '51-pegasi-b', '51 Pegasi b')]);
   const result = attachScienceLinks({
     featured: [{ pl_name: '51 Peg b' }], plot: [{ name: '51 Peg b', radiusEarth: 14.1 }],
+    comparison: [{ name: '51 Peg b', starRadiusSun: 1.18, radiusEarth: 14.1 }],
   }, { pages, source: scienceEndpoint, retrievedAt: '2026-10-29T00:00:00Z', total: 1 });
-  for (const planet of [...result.featured, ...result.plot]) {
+  for (const planet of [...result.featured, ...result.plot, ...result.comparison]) {
     assert.equal(planet.scienceUrl, 'https://science.nasa.gov/exoplanet-catalog/51-pegasi-b/');
     assert.equal(planet.scienceName, '51 Pegasi b');
   }
   assert.equal(result.plot[0].radiusEarth, 14.1);
-  assert.throws(() => attachScienceLinks({ featured: [{ pl_name: 'Unknown b' }], plot: [] }, { pages }), /No verified NASA Science page/);
+  assert.equal(result.comparison[0].starRadiusSun, 1.18);
+  assert.throws(() => attachScienceLinks({ featured: [{ pl_name: 'Unknown b' }], plot: [], comparison: [] }, { pages }), /No verified NASA Science page/);
+  assert.throws(() => attachScienceLinks({ featured: [], plot: [], comparison: [{ name: 'Unknown b' }] }, { pages }), /No verified NASA Science page/);
 });
 
 test('rejects invalid URLs, missing metadata and ambiguous identities', () => {

@@ -13,4 +13,5 @@ const temporary = new URL('../src/data/planets.json.tmp', import.meta.url);
 await writeFile(temporary, `${JSON.stringify(snapshot, null, 2)}\n`);
 await rename(temporary, target);
 console.log(`Saved ${snapshot.totalPlanets} confirmed planets across ${snapshot.totalSystems} systems (${snapshot.retrievedAt}).`);
+console.log(`Saved ${snapshot.plot.length} distance points and ${snapshot.comparison.length} planet-host comparisons.`);
 console.log(`Linked every featured and plotted planet to verified NASA Science pages (${catalog.total} catalog entries).`);

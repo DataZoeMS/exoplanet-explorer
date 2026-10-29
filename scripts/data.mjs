@@ -1,4 +1,4 @@
-export const query = 'select pl_name,hostname,discoverymethod,disc_year,pl_rade,pl_orbper,sy_dist from pscomppars';
+export const query = 'select pl_name,hostname,discoverymethod,disc_year,pl_rade,st_rad,pl_orbper,sy_dist from pscomppars';
 export const endpoint = new URL('https://exoplanetarchive.ipac.caltech.edu/TAP/sync');
 endpoint.search = new URLSearchParams({ query, format: 'json' }).toString();
 
@@ -24,7 +24,7 @@ export function summarize(rows, retrievedAt) {
       || names.has(row.pl_name)) {
       throw new Error('NASA returned invalid or duplicate planetary records.');
     }
-    for (const field of ['pl_rade', 'pl_orbper', 'sy_dist']) {
+    for (const field of ['pl_rade', 'st_rad', 'pl_orbper', 'sy_dist']) {
       if (row[field] !== null && (!Number.isFinite(row[field]) || row[field] <= 0)) {
         throw new Error(`Invalid ${field} for ${row.pl_name}.`);
       }
@@ -47,11 +47,19 @@ export function summarize(rows, retrievedAt) {
       radiusEarth: row.pl_rade,
     }))
     .sort((a, b) => a.distanceLy - b.distanceLy || a.name.localeCompare(b.name, 'en'));
+  const comparison = rows
+    .filter(row => row.st_rad !== null && row.pl_rade !== null)
+    .map(row => ({
+      name: row.pl_name, hostName: row.hostname,
+      starRadiusSun: row.st_rad, radiusEarth: row.pl_rade,
+    }))
+    .sort((a, b) => a.starRadiusSun - b.starRadiusSun
+      || a.radiusEarth - b.radiusEarth || a.name.localeCompare(b.name, 'en'));
   return {
     retrievedAt, source: endpoint.href, table: 'pscomppars',
     totalPlanets: names.size, totalSystems: hosts.size,
     methods: [...methods].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count),
     discoveries: [...years].map(([year, count]) => ({ year, count })).sort((a, b) => a.year - b.year),
-    featured, plot,
+    featured, plot, comparison,
   };
 }

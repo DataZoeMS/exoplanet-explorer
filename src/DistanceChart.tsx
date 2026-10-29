@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button, Input, Select, Tooltip } from '@fluentui/react-components';
 import { ArrowLeftRegular, ArrowRightRegular, ArrowUpRightRegular, SearchRegular } from '@fluentui/react-icons';
 import { chart, distanceBands, distanceLimit, distanceRadius, markerRadius, planetPosition, quarterArc, radiusBounds, type PlotPlanet } from './distance-scale';
+import { usePlanetTooltip } from './usePlanetTooltip';
 import './distance-chart.css';
 
 const number = new Intl.NumberFormat('en-US');
@@ -16,20 +17,11 @@ type Props = {
   date: string;
 };
 
-type HoveredPlanet = {
-  planet: CatalogPlanet;
-  target: { getBoundingClientRect: () => DOMRect; contextElement: Element };
-};
-
 export function DistanceChart({ planets, totalPlanets, date }: Props) {
   const [query, setQuery] = useState('');
   const [range, setRange] = useState('all');
   const [selectedName, setSelectedName] = useState('TRAPPIST-1 e');
-  const [hovered, setHovered] = useState<HoveredPlanet | null>(null);
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (hideTimer.current !== null) clearTimeout(hideTimer.current);
-  }, []);
+  const { hovered, cancelHide, dismissTooltip, scheduleHide, showTooltip } = usePlanetTooltip<CatalogPlanet>();
   const fullLimit = useMemo(() => distanceLimit(Math.max(1, ...planets.map(planet => planet.distanceLy))), [planets]);
   const sizeBounds = useMemo(() => radiusBounds(planets), [planets]);
   const limit = range === 'all' ? fullLimit : Number(range);
@@ -45,31 +37,6 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
   const selectedPosition = selected && sizeBounds ? planetPosition(selected, limit, sizeBounds) : null;
   const bands = distanceBands(limit);
   const excluded = totalPlanets - planets.length;
-
-  function cancelHide() {
-    if (hideTimer.current !== null) {
-      clearTimeout(hideTimer.current);
-      hideTimer.current = null;
-    }
-  }
-
-  function dismissTooltip() {
-    cancelHide();
-    setHovered(null);
-  }
-
-  function scheduleHide() {
-    cancelHide();
-    hideTimer.current = setTimeout(() => {
-      hideTimer.current = null;
-      setHovered(null);
-    }, 200);
-  }
-
-  function showTooltip(planet: CatalogPlanet, target: Element) {
-    cancelHide();
-    setHovered({ planet, target: { getBoundingClientRect: () => target.getBoundingClientRect(), contextElement: target } });
-  }
 
   function step(direction: number) {
     dismissTooltip();

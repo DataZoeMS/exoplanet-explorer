@@ -11,6 +11,7 @@ import {
 } from '@fluentui/react-icons';
 import data from './data/planets.json';
 import { DistanceChart } from './DistanceChart';
+import { ComparisonChart } from './ComparisonChart';
 import './styles.css';
 
 type Planet = (typeof data.featured)[number];
@@ -58,6 +59,7 @@ function PlanetDetails({ planet, date }: { planet: Planet; date: string }) {
               <div><dt>Discovery year</dt><dd>{planet.disc_year}</dd></div>
               <div><dt>Discovery method</dt><dd>{planet.discoverymethod}</dd></div>
               <div><dt>Planet radius</dt><dd>{measurement(planet.pl_rade, 'Earth radii')}</dd></div>
+              <div><dt>Host star radius</dt><dd>{measurement(planet.st_rad, 'Sun radii')}</dd></div>
               <div><dt>Orbital period</dt><dd>{measurement(planet.pl_orbper, 'days')}</dd></div>
               <div><dt>Distance from Earth</dt><dd>{measurement(planet.sy_dist === null ? null : planet.sy_dist * 3.26156, 'light-years')}</dd></div>
             </dl>
@@ -122,6 +124,7 @@ function App() {
         </a>
         <nav aria-label="Main navigation">
           <a href="#distance">Distances</a>
+          <a href="#comparison">Compare sizes</a>
           <a href="#science">The science</a>
           <a href="#resources">NASA resources <ArrowUpRightRegular aria-hidden="true" /></a>
         </nav>
@@ -170,6 +173,7 @@ function App() {
         </section>
 
         <DistanceChart planets={data.plot} totalPlanets={data.totalPlanets} date={date} />
+        <ComparisonChart planets={data.comparison} totalPlanets={data.totalPlanets} date={date} />
 
         <section id="discover" className="discover-section page-width" aria-labelledby="discover-title">
           <div className="section-heading">

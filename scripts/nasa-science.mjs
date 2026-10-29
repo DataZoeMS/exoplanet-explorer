@@ -72,5 +72,6 @@ export function attachScienceLinks(snapshot, catalog) {
     scienceCatalog: { source: catalog.source, retrievedAt: catalog.retrievedAt, total: catalog.total },
     featured: snapshot.featured.map(planet => ({ ...planet, ...pageFor(planet.pl_name) })),
     plot: snapshot.plot.map(planet => ({ ...planet, ...pageFor(planet.name) })),
+    comparison: snapshot.comparison.map(planet => ({ ...planet, ...pageFor(planet.name) })),
   };
 }
