@@ -27,10 +27,26 @@
 .comparison-section .distance-inspector .comparison-host { margin: -10px 0 24px; }
 .comparison-category { font-size: 11px; color: var(--cp-accent); padding: 10px 0; border-top: 1px solid var(--cp-border); margin: 0 0 16px; }
 .comparison-scroll-hint { display: none; color: var(--cp-text-soft); font-size: 10px; margin: 8px 12px 0; }
+.comparison-zoom-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; padding: 20px 28px; border-bottom: 1px solid var(--cp-border); background: var(--cp-bg); }
+.comparison-zoom-control { flex: 1 1 220px; max-width: 360px; min-width: 0; }
+.comparison-zoom-control > div:first-child { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; }
+.comparison-zoom-control label { font-weight: 600; }
+.comparison-zoom-control output { color: var(--cp-accent); font-variant-numeric: tabular-nums; }
+.comparison-zoom-input { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.comparison-zoom-input input { min-width: 0; width: 100%; accent-color: var(--cp-accent); cursor: ew-resize; }
+.comparison-zoom-input input:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 4px; }
+.comparison-zoom-toolbar > p { flex: 1 0 100%; margin: 0; font-size: 11px; color: var(--cp-text-muted); }
+.comparison-axis-zoom[data-zoom-axis="star"] { cursor: ew-resize; }
+.comparison-axis-zoom[data-zoom-axis="planet"] { cursor: ns-resize; }
+.comparison-axis-hit { fill: transparent; pointer-events: all; }
+.comparison-axis-zoom:hover .comparison-axis-hit { fill: var(--cp-accent-soft); }
+.comparison-empty { font-size: 12px; }
 
 html[data-theme="dark"] .comparison-section { --cp-text-muted: var(--cp-text-soft); }
 
 @media (max-width: 600px) {
   .comparison-svg { min-width: 600px; }
   .comparison-scroll-hint { display: block; }
+  .comparison-zoom-toolbar { padding: 20px; gap: 16px; }
+  .comparison-zoom-control { flex-basis: 100%; max-width: none; }
 }

@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Input, Select, Tooltip } from '@fluentui/react-components';
-import { ArrowLeftRegular, ArrowRightRegular, ArrowUpRightRegular, SearchRegular } from '@fluentui/react-icons';
+import { AddRegular, ArrowLeftRegular, ArrowRightRegular, ArrowUpRightRegular, SearchRegular, SubtractRegular } from '@fluentui/react-icons';
 import {
   comparisonBounds, comparisonChart as chart, comparisonPosition, comparisonTicks,
-  quadrantFor, quadrantLabels, type ComparisonPlanet, type Quadrant,
+  comparisonZoomFactor, comparisonZoomMax, changeComparisonZoom, inComparisonView, zoomComparisonBounds,
+  quadrantFor, quadrantLabels, type ComparisonAxis, type ComparisonPlanet, type ComparisonZoom, type Quadrant,
 } from './comparison-scale';
 import { usePlanetTooltip } from './usePlanetTooltip';
 import './comparison-chart.css';
@@ -13,7 +14,7 @@ type Props = { planets: CatalogPlanet[]; totalPlanets: number; date: string };
 const number = new Intl.NumberFormat('en-US');
 const decimal = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 3 });
 const tickLabel = (exponent: number) => exponent < 0
-  ? `1/${2 ** -exponent}\u00d7` : `${2 ** exponent}\u00d7`;
+  && Number.isInteger(exponent) ? `1/${2 ** -exponent}\u00d7` : `${decimal.format(2 ** exponent)}\u00d7`;
 
 const quadrants: { key: Quadrant; x: number; y: number; star: string; planet: string }[] = [
   { key: 'smaller-star-larger-planet', x: chart.left, y: chart.top, star: 'SMALLER STAR', planet: 'LARGER PLANET' },
@@ -26,17 +27,24 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
   const [query, setQuery] = useState('');
   const [quadrant, setQuadrant] = useState('all');
   const [selectedName, setSelectedName] = useState('TRAPPIST-1 e');
+  const [zoom, setZoom] = useState<ComparisonZoom>({ star: 0, planet: 0 });
+  const svgRef = useRef<SVGSVGElement>(null);
+  const wheelDelta = useRef({ star: 0, planet: 0 });
   const { hovered, cancelHide, dismissTooltip, scheduleHide, showTooltip } = usePlanetTooltip<CatalogPlanet>();
-  const bounds = useMemo(() => comparisonBounds(planets), [planets]);
+  const fullBounds = useMemo(() => comparisonBounds(planets), [planets]);
+  const bounds = useMemo(() => zoomComparisonBounds(fullBounds, zoom), [fullBounds, zoom]);
   const catalog = useMemo(() => planets.map(planet => ({
-    planet, quadrant: quadrantFor(planet), ...comparisonPosition(planet, bounds),
-  })), [planets, bounds]);
-  const visible = useMemo(() => {
+    planet, quadrant: quadrantFor(planet),
+  })), [planets]);
+  const matching = useMemo(() => {
     const text = query.trim().toLocaleLowerCase('en-US');
     return catalog.filter(entry => (quadrant === 'all' || entry.quadrant === quadrant)
       && [entry.planet.name, entry.planet.scienceName, entry.planet.hostName]
         .some(name => name.toLocaleLowerCase('en-US').includes(text)));
   }, [catalog, query, quadrant]);
+  const visible = useMemo(() => matching
+    .filter(entry => inComparisonView(entry.planet, bounds))
+    .map(entry => ({ ...entry, ...comparisonPosition(entry.planet, bounds) })), [matching, bounds]);
   const selectedIndex = Math.max(0, visible.findIndex(entry => entry.planet.name === selectedName));
   const selected = visible[selectedIndex];
   const xTicks = comparisonTicks(bounds.star);
@@ -44,13 +52,54 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
   const xFor = (tick: number) => chart.originX + tick / bounds.star * (chart.right - chart.originX);
   const yFor = (tick: number) => chart.originY - tick / bounds.planet * (chart.originY - chart.top);
 
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const onWheel = (event: WheelEvent) => {
+      if (event.ctrlKey || event.metaKey || !(event.target instanceof Element)) return;
+      const axis = event.target.closest('[data-zoom-axis]')?.getAttribute('data-zoom-axis');
+      if (axis !== 'star' && axis !== 'planet') return;
+      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+      if (delta === 0 || !event.cancelable) return;
+      event.preventDefault();
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? svg.clientHeight : 1;
+      wheelDelta.current[axis] += delta * unit;
+      const steps = -Math.trunc(wheelDelta.current[axis] / 80);
+      if (steps === 0) return;
+      wheelDelta.current[axis] = 0;
+      dismissTooltip();
+      setZoom(current => changeComparisonZoom(current, axis, steps));
+    };
+    svg.addEventListener('wheel', onWheel, { passive: false });
+    return () => svg.removeEventListener('wheel', onWheel);
+  }, [dismissTooltip]);
+
+  function adjustZoom(axis: ComparisonAxis, steps: number) {
+    dismissTooltip();
+    wheelDelta.current[axis] = 0;
+    setZoom(current => changeComparisonZoom(current, axis, steps));
+  }
+
+  function setAxisZoom(axis: ComparisonAxis, step: number) {
+    comparisonZoomFactor(step);
+    dismissTooltip();
+    wheelDelta.current[axis] = 0;
+    setZoom(current => ({ ...current, [axis]: step }));
+  }
+
+  function resetAxes() {
+    dismissTooltip();
+    wheelDelta.current = { star: 0, planet: 0 };
+    setZoom({ star: 0, planet: 0 });
+  }
+
   function step(direction: number) {
     dismissTooltip();
     if (visible.length) setSelectedName(visible[(selectedIndex + direction + visible.length) % visible.length].planet.name);
   }
 
   function reset() {
-    dismissTooltip();
+    resetAxes();
     setQuery('');
     setQuadrant('all');
     setSelectedName('TRAPPIST-1 e');
@@ -80,6 +129,27 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
           </div>
           <Button appearance="subtle" onClick={reset}>Reset view</Button>
         </div>
+        <div className="comparison-zoom-toolbar" role="group" aria-label="Independent axis zoom">
+          {(['star', 'planet'] as const).map(axis => {
+            const name = axis === 'star' ? 'Star radius (x)' : 'Planet radius (y)';
+            const factor = decimal.format(comparisonZoomFactor(zoom[axis]));
+            return <div className="comparison-zoom-control" key={axis}>
+              <div><label htmlFor={`comparison-${axis}-zoom`}>{name}</label>
+                <output htmlFor={`comparison-${axis}-zoom`} aria-live="polite">{factor}&times;</output></div>
+              <div className="comparison-zoom-input">
+                <Button appearance="subtle" icon={<SubtractRegular />} disabled={zoom[axis] === 0}
+                  aria-label={`Zoom out ${axis} radius axis`} onClick={() => adjustZoom(axis, -1)} />
+                <input id={`comparison-${axis}-zoom`} type="range" min="0" max={comparisonZoomMax} step="1" value={zoom[axis]}
+                  aria-label={`${axis === 'star' ? 'Star' : 'Planet'} radius axis zoom`} aria-valuetext={`${factor} times zoom`}
+                  onChange={event => setAxisZoom(axis, event.currentTarget.valueAsNumber)} />
+                <Button appearance="subtle" icon={<AddRegular />} disabled={zoom[axis] === comparisonZoomMax}
+                  aria-label={`Zoom in ${axis} radius axis`} onClick={() => adjustZoom(axis, 1)} />
+              </div>
+            </div>;
+          })}
+          <Button appearance="subtle" onClick={resetAxes} disabled={zoom.star === 0 && zoom.planet === 0}>Reset axes</Button>
+          <p>Scroll over the bottom axis to zoom x, or the left axis to zoom y. Earth/Sun stays centered.</p>
+        </div>
         <div className="distance-body">
           <figure className="distance-figure">
             <div className="distance-legend" role="group" aria-labelledby="comparison-legend-title">
@@ -93,7 +163,7 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
               </ul>
               <p className="distance-angle-key">Both axes use log ratios: twice and half the reference radius are equally far from the center. Each dot is one planet-host pair; dot size is constant.</p>
             </div>
-            <p className="distance-count" role="status">{number.format(visible.length)} of {number.format(planets.length)} comparable planets <span>/</span> fixed log-ratio axes</p>
+            <p className="distance-count" role="status">{number.format(visible.length)} in view / {number.format(matching.length)} matching / {number.format(planets.length)} comparable planets <span>/</span> independent axis zoom</p>
             <p className="comparison-scroll-hint">Scroll the plot sideways to see every quadrant.</p>
             <Tooltip visible={hovered !== null} relationship="description" withArrow hideDelay={200}
               positioning={{ target: hovered?.target, position: 'above', align: 'center', offset: 12 }}
@@ -117,9 +187,9 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                 aria-describedby="comparison-notes comparison-planet-tooltip"
                 onFocus={event => { if (event.target === event.currentTarget && selected) showTooltip(selected.planet, event.currentTarget); }}
                 onBlur={dismissTooltip}>
-                <svg className="comparison-svg" viewBox={`0 0 ${chart.width} ${chart.height}`} role="img" aria-labelledby="comparison-plot-title comparison-plot-description">
+                <svg ref={svgRef} className="comparison-svg" viewBox={`0 0 ${chart.width} ${chart.height}`} role="img" aria-labelledby="comparison-plot-title comparison-plot-description">
                   <title id="comparison-plot-title">Planet and host-star radii relative to Earth and the Sun</title>
-                  <desc id="comparison-plot-description">The horizontal axis is stellar radius in Sun radii; the vertical axis is planetary radius in Earth radii. Both use logarithmic ratios. The axes cross at one Sun radius and one Earth radius, not at zero physical size. Larger stars are right, smaller stars left; larger planets above, smaller planets below. Search, quadrant filters, and Previous or Next provide access to every planet.</desc>
+                  <desc id="comparison-plot-description">The horizontal axis is stellar radius in Sun radii; the vertical axis is planetary radius in Earth radii. Both use logarithmic ratios. The axes cross at one Sun radius and one Earth radius, not at zero physical size. Larger stars are right, smaller stars left; larger planets above, smaller planets below. Scroll over either axis to zoom it independently, or use the labeled zoom controls. Search, quadrant filters, and Previous or Next provide access to planets in the current view.</desc>
                   {quadrants.map(item => <rect key={item.key} className="comparison-quadrant comparison-color" data-quadrant={item.key}
                     x={item.x} y={item.y} width={chart.originX - chart.left} height={chart.originY - chart.top} />)}
                   <g className="comparison-grid">
@@ -149,10 +219,18 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                     </text>)}
                   </g>
                   <g className="comparison-axis-labels">
-                    {xTicks.map(tick => <text key={`x${tick}`} x={xFor(tick)} y={chart.bottom + 25} textAnchor="middle">{tickLabel(tick)}</text>)}
-                    {yTicks.map(tick => <text key={`y${tick}`} x={chart.left - 10} y={yFor(tick) + 4} textAnchor="end">{tickLabel(tick)}</text>)}
-                    <text className="comparison-axis-title" x={chart.originX} y={chart.height - 24} textAnchor="middle">HOST STAR RADIUS / SUN RADIUS</text>
-                    <text className="comparison-axis-title" x="20" y={chart.originY} textAnchor="middle" transform={`rotate(-90 20 ${chart.originY})`}>PLANET RADIUS / EARTH RADIUS</text>
+                    <g className="comparison-axis-zoom" data-zoom-axis="star">
+                      <title>Scroll up to zoom in on star radius; scroll down to zoom out.</title>
+                      <rect className="comparison-axis-hit" x={chart.left} y={chart.bottom + 2} width={chart.right - chart.left} height={chart.height - chart.bottom - 2} />
+                      {xTicks.map(tick => <text key={`x${tick}`} x={xFor(tick)} y={chart.bottom + 25} textAnchor="middle">{tickLabel(tick)}</text>)}
+                      <text className="comparison-axis-title" x={chart.originX} y={chart.height - 24} textAnchor="middle">HOST STAR RADIUS / SUN RADIUS</text>
+                    </g>
+                    <g className="comparison-axis-zoom" data-zoom-axis="planet">
+                      <title>Scroll up to zoom in on planet radius; scroll down to zoom out.</title>
+                      <rect className="comparison-axis-hit" x="0" y={chart.top} width={chart.left - 2} height={chart.bottom - chart.top} />
+                      {yTicks.map(tick => <text key={`y${tick}`} x={chart.left - 10} y={yFor(tick) + 4} textAnchor="end">{tickLabel(tick)}</text>)}
+                      <text className="comparison-axis-title" x="20" y={chart.originY} textAnchor="middle" transform={`rotate(-90 20 ${chart.originY})`}>PLANET RADIUS / EARTH RADIUS</text>
+                    </g>
                   </g>
                   <g className="comparison-earth" pointerEvents="none">
                     <circle className="selection-halo" cx={chart.originX} cy={chart.originY} r="11" />
@@ -161,7 +239,9 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                   </g>
                   {/* Keep selection visible when a pair overlaps the Earth/Sun marker. */}
                   {selected && <circle className="comparison-selection-ring" cx={selected.x} cy={selected.y} r="10" pointerEvents="none" />}
-                  {!selected && <text className="distance-empty-label" x={chart.originX} y={chart.originY + 70} textAnchor="middle">No matching planet-host pairs</text>}
+                  {!selected && <text className="distance-empty-label comparison-empty" x={chart.originX} y={chart.originY + 70} textAnchor="middle">
+                    {matching.length ? 'No pairs in this zoom range. Reset axes to see them.' : 'No matching planet-host pairs'}
+                  </text>}
                 </svg>
               </div>
             </Tooltip>
@@ -185,19 +265,20 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                     <a className="text-link" href={`https://exoplanetarchive.ipac.caltech.edu/cgi-bin/DisplayOverview/nph-DisplayOverview?objname=${encodeURIComponent(selected.planet.name)}&type=CONFIRMED_PLANET`}
                       target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Archive data <ArrowUpRightRegular aria-hidden="true" /></a>
                   </div>
-                </> : <div className="distance-no-results"><h3>No matching systems.</h3><p>Try a different name or choose all quadrants.</p></div>}
+                </> : <div className="distance-no-results"><h3>No systems in view.</h3><p>{matching.length ? 'Zoom out or reset the axes to see matching planets.' : 'Try a different name or choose all quadrants.'}</p></div>}
               </div>
               <div className="distance-browse">
                 <Button appearance="outline" icon={<ArrowLeftRegular />} disabled={visible.length < 2} aria-label="Previous planet by star radius" onClick={() => step(-1)} />
                 <span>{visible.length ? `${number.format(selectedIndex + 1)} / ${number.format(visible.length)}` : '0 results'}</span>
                 <Button appearance="outline" icon={<ArrowRightRegular />} disabled={visible.length < 2} aria-label="Next planet by star radius" onClick={() => step(1)} />
               </div>
-              <p className="distance-browse-note">Browse by increasing star radius, then planet radius. Search and these buttons work without using the plot.</p>
+              <p className="distance-browse-note">Browse planets in view by increasing star radius, then planet radius. Zoom out to include more pairs.</p>
             </div>
             <div id="comparison-notes" className="distance-reading-notes">
               <h3>Earth and the Sun are the origin.</h3>
               <p>The center is one Sun radius on x and one Earth radius on y. Log-ratio coordinates put half-size and double-size equally far from the center. Tick labels show radius ratios, not signed physical sizes.</p>
-              <p>Quadrants compare stars with the Sun and planets with Earth. Points exactly equal to either reference lie on an axis. The axes stay fixed when searching or filtering.</p>
+              <p>Quadrants compare stars with the Sun and planets with Earth. Points exactly equal to either reference lie on an axis. Search and filters preserve the zoom. Scroll over an axis, or use its slider and buttons, to zoom that axis independently from 1 to 16 times. Earth/Sun stays centered.</p>
+              <p>Zoom hides pairs outside the displayed radii without clamping them to the edge. Reset axes restores the full catalog range and preserves search and filters; Reset view also clears search and filters.</p>
               <p>Each dot is one confirmed planet paired with its catalog host star, not a whole system's extent. Multiple planets can share a host. For multiple-star systems, we use the reported stellar radius, not a combined radius.</p>
               <p>Radii may be measured or estimated, and composite values can come from different studies. Overlapping dots do not show every pair separately; use search or browsing to inspect them.</p>
             </div>
