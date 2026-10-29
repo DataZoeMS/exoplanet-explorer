@@ -77,27 +77,27 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
         </div>
         <div className="distance-body">
           <figure className="distance-figure">
-            <div className="distance-legend" role="group" aria-labelledby="distance-legend-title">
-              <div className="distance-legend-heading">
-                <h3 id="distance-legend-title">Chart legend</h3><span>Distances in light-years</span>
+            <div className="distance-inspector">
+              <p className="eyebrow">A WORLD IN PERSPECTIVE</p>
+              <div aria-live="polite" aria-atomic="true">
+                {selected ? <>
+                  <h3><a className="planet-name-link" href={selected.scienceUrl} target="_blank" rel="noopener noreferrer" title="Opens in a new tab" aria-label={`${selected.scienceName} - NASA Science (opens in a new tab)`}>{selected.name}<ArrowUpRightRegular aria-hidden="true" /></a></h3>
+                  <dl>
+                    <div><dt>Distance from Earth</dt><dd>{decimal.format(selected.distanceLy)} <span>light-years</span></dd></div>
+                    <div><dt>Catalog planet radius</dt><dd>{decimal.format(selected.radiusEarth)} <span>Earth radii</span></dd></div>
+                  </dl>
+                  <div className="distance-source-links">
+                    <a className="text-link" href={selected.scienceUrl} target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Science <ArrowUpRightRegular aria-hidden="true" /></a>
+                    <a className="text-link" href={`https://exoplanetarchive.ipac.caltech.edu/cgi-bin/DisplayOverview/nph-DisplayOverview?objname=${encodeURIComponent(selected.name)}&type=CONFIRMED_PLANET`} target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Archive data <ArrowUpRightRegular aria-hidden="true" /></a>
+                  </div>
+                </> : <div className="distance-no-results"><h3>No matching worlds.</h3><p>Try a different name or a wider distance range.</p></div>}
               </div>
-              <ul className="distance-symbol-key">
-                <li><svg viewBox="0 0 28 24" aria-hidden="true"><circle className="legend-earth-halo" cx="14" cy="12" r="8" /><circle className="legend-earth-dot" cx="14" cy="12" r={markerRadius(1)} /></svg>Earth / origin</li>
-                <li><svg viewBox="0 0 28 24" aria-hidden="true"><circle className="legend-planet-dot" cx="14" cy="12" r="5" /></svg>Exoplanet</li>
-                <li><svg viewBox="0 0 28 24" aria-hidden="true"><circle className="legend-selected-halo" cx="14" cy="12" r="8" /><circle className="legend-selected-dot" cx="14" cy="12" r="4" /></svg>Selected planet</li>
-                <li><svg viewBox="0 0 28 24" aria-hidden="true"><path className="legend-distance-band" d="M 4 21 A 18 18 0 0 1 24 3" /></svg>Distance band</li>
-              </ul>
-              <div className="distance-size-key">
-                <span>Planet radius</span>
-                <svg viewBox="0 0 240 52" role="img" aria-label="Size legend: one, four, and sixteen Earth radii. Circle area, not diameter, scales with planet radius.">
-                  {[1, 4, 16].map((radius, index) => <g key={radius}>
-                    <circle cx={32 + index * 84} cy={16} r={markerRadius(radius)} />
-                    <text x={32 + index * 84} y={44} textAnchor="middle">{radius} Earth radii</text>
-                  </g>)}
-                </svg>
-                <p>Marker <strong>area</strong> scales with planet radius, not diameter. A 4-Earth-radius planet has twice the marker diameter of an Earth-sized planet. Halos indicate selection or Earth's origin, not size.</p>
+              <div className="distance-browse">
+                <Button appearance="outline" icon={<ArrowLeftRegular />} disabled={visible.length < 2} aria-label="Previous planet by distance" onClick={() => step(-1)} />
+                <span>{visible.length ? `${number.format(selectedIndex + 1)} / ${number.format(visible.length)}` : '0 results'}</span>
+                <Button appearance="outline" icon={<ArrowRightRegular />} disabled={visible.length < 2} aria-label="Next planet by distance" onClick={() => step(1)} />
               </div>
-              <p className="distance-angle-key"><strong>Size around the arc:</strong> smallest near the left vertical axis, largest near the bottom horizontal axis. Angular spacing uses log radius, not sky direction.</p>
+              <p className="distance-browse-note">Browse in order of distance. Search and these buttons work without using the plot.</p>
             </div>
             <p className="distance-count" role="status">{number.format(visible.length)} of {number.format(planets.length)} plottable planets <span>/</span> log distance scale</p>
             <p className="distance-scroll-hint">Scroll the plot sideways to see every distance band.</p>
@@ -167,28 +167,28 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
             <figcaption className="distance-caption">Hover a dot for a quick look, or select it to keep its details in the panel. Focus the plot to preview the selected planet; press Escape to dismiss the tooltip.</figcaption>
           </figure>
 
-          <aside className="distance-sidebar" aria-label="Chart selection and reading notes">
-            <div className="distance-inspector">
-              <p className="eyebrow">A WORLD IN PERSPECTIVE</p>
-              <div aria-live="polite" aria-atomic="true">
-                {selected ? <>
-                  <h3><a className="planet-name-link" href={selected.scienceUrl} target="_blank" rel="noopener noreferrer" title="Opens in a new tab" aria-label={`${selected.scienceName} - NASA Science (opens in a new tab)`}>{selected.name}<ArrowUpRightRegular aria-hidden="true" /></a></h3>
-                  <dl>
-                    <div><dt>Distance from Earth</dt><dd>{decimal.format(selected.distanceLy)} <span>light-years</span></dd></div>
-                    <div><dt>Catalog planet radius</dt><dd>{decimal.format(selected.radiusEarth)} <span>Earth radii</span></dd></div>
-                  </dl>
-                  <div className="distance-source-links">
-                    <a className="text-link" href={selected.scienceUrl} target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Science <ArrowUpRightRegular aria-hidden="true" /></a>
-                    <a className="text-link" href={`https://exoplanetarchive.ipac.caltech.edu/cgi-bin/DisplayOverview/nph-DisplayOverview?objname=${encodeURIComponent(selected.name)}&type=CONFIRMED_PLANET`} target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Archive data <ArrowUpRightRegular aria-hidden="true" /></a>
-                  </div>
-                </> : <div className="distance-no-results"><h3>No matching worlds.</h3><p>Try a different name or a wider distance range.</p></div>}
+          <aside className="distance-sidebar" aria-label="Chart legend and reading notes">
+            <div className="distance-legend" role="group" aria-labelledby="distance-legend-title">
+              <div className="distance-legend-heading">
+                <h3 id="distance-legend-title">Chart legend</h3><span>Distances in light-years</span>
               </div>
-              <div className="distance-browse">
-                <Button appearance="outline" icon={<ArrowLeftRegular />} disabled={visible.length < 2} aria-label="Previous planet by distance" onClick={() => step(-1)} />
-                <span>{visible.length ? `${number.format(selectedIndex + 1)} / ${number.format(visible.length)}` : '0 results'}</span>
-                <Button appearance="outline" icon={<ArrowRightRegular />} disabled={visible.length < 2} aria-label="Next planet by distance" onClick={() => step(1)} />
+              <ul className="distance-symbol-key">
+                <li><svg viewBox="0 0 28 24" aria-hidden="true"><circle className="legend-earth-halo" cx="14" cy="12" r="8" /><circle className="legend-earth-dot" cx="14" cy="12" r={markerRadius(1)} /></svg>Earth / origin</li>
+                <li><svg viewBox="0 0 28 24" aria-hidden="true"><circle className="legend-planet-dot" cx="14" cy="12" r="5" /></svg>Exoplanet</li>
+                <li><svg viewBox="0 0 28 24" aria-hidden="true"><circle className="legend-selected-halo" cx="14" cy="12" r="8" /><circle className="legend-selected-dot" cx="14" cy="12" r="4" /></svg>Selected planet</li>
+                <li><svg viewBox="0 0 28 24" aria-hidden="true"><path className="legend-distance-band" d="M 4 21 A 18 18 0 0 1 24 3" /></svg>Distance band</li>
+              </ul>
+              <div className="distance-size-key">
+                <span>Planet radius</span>
+                <svg viewBox="0 0 240 52" role="img" aria-label="Size legend: one, four, and sixteen Earth radii. Circle area, not diameter, scales with planet radius.">
+                  {[1, 4, 16].map((radius, index) => <g key={radius}>
+                    <circle cx={32 + index * 84} cy={16} r={markerRadius(radius)} />
+                    <text x={32 + index * 84} y={44} textAnchor="middle">{radius} Earth radii</text>
+                  </g>)}
+                </svg>
+                <p>Marker <strong>area</strong> scales with planet radius, not diameter. A 4-Earth-radius planet has twice the marker diameter of an Earth-sized planet. Halos indicate selection or Earth's origin, not size.</p>
               </div>
-              <p className="distance-browse-note">Browse in order of distance. Search and these buttons work without using the plot.</p>
+              <p className="distance-angle-key"><strong>Size around the arc:</strong> smallest near the left vertical axis, largest near the bottom horizontal axis. Angular spacing uses log radius, not sky direction.</p>
             </div>
 
             <div id="distance-notes" className="distance-reading-notes">
