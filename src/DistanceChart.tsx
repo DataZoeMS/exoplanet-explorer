@@ -124,14 +124,14 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
                 className: 'planet-hover-card',
                 onPointerEnter: cancelHide,
                 onPointerLeave: scheduleHide,
-                children: hovered && <>
+                children: hovered && <div className="planet-hover-body">
                   <div className="planet-hover-heading"><span className="planet-hover-orb" aria-hidden="true" /><div><span className="planet-hover-kicker">CONFIRMED EXOPLANET</span><strong>{hovered.planet.name}</strong></div></div>
                   <dl className="planet-hover-values">
                     <div><dt>Distance from Earth</dt><dd>{decimal.format(hovered.planet.distanceLy)}<span>light-years</span></dd></div>
                     <div><dt>Catalog radius</dt><dd>{decimal.format(hovered.planet.radiusEarth)}<span>Earth radii</span></dd></div>
                   </dl>
                   <p className="planet-hover-note">Radius may be measured or estimated.<br />Select the dot for NASA Science and archive links.</p>
-                </>,
+                </div>,
               }}>
             <div ref={explore.stageRef} className="distance-stage" tabIndex={0} role="region" aria-label="Exoplanet distance chart"
               aria-describedby="distance-notes distance-planet-tooltip"

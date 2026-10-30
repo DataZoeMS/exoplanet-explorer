@@ -215,7 +215,7 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
               content={{
                 id: 'comparison-planet-tooltip', className: 'planet-hover-card',
                 onPointerEnter: cancelHide, onPointerLeave: scheduleHide,
-                children: hovered && <>
+                children: hovered && <div className="planet-hover-body">
                   <div className="planet-hover-heading"><span className="planet-hover-orb" aria-hidden="true" /><div>
                     <span className="planet-hover-kicker">{hovered.planet === earthSunReference ? 'OUR SOLAR SYSTEM' : 'PLANET + HOST STAR'}</span>
                     <strong>{hovered.planet === earthSunReference ? 'Earth / Sun' : hovered.planet.name}</strong>
@@ -234,7 +234,7 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                   <p className="planet-hover-note">{hovered.planet === earthSunReference
                     ? 'Earth/Sun is the (1, 1) size reference. Orbital measurements are approximate.'
                     : <>{quadrantLabels[quadrantFor(hovered.planet)]}.<br />Catalog radii may be measured or estimated. Select the dot for NASA links.</>}</p>
-                </>,
+                </div>,
               }}>
               <div ref={explore.stageRef} className="distance-stage comparison-stage" tabIndex={0} role="region" aria-label="Earth and Sun size comparison"
                 aria-describedby="comparison-notes comparison-planet-tooltip"

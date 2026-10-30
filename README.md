@@ -88,11 +88,15 @@ Tests cover reference placement, reciprocal symmetry, independent axis zoom and 
 
 Each chart's **Expand distance chart** or **Expand size chart** button opens a browser-area explorer without requiring the browser Fullscreen API. Closing it returns to the same landing-page chart with its search, filters, selection, and independent size-axis zoom intact. A native modal dialog contains the existing chart rather than creating another catalog instance. It locks background scrolling, confines keyboard focus, restores focus to the expand button on close, and mounts Fluent tooltips inside the dialog's top layer.
 
+The main-page charts share Explore's compact selection strip: the selected planet, measurements, NASA links, and browsing arrows use an inline, wrapping layout instead of a tall card. Narrow main-page layouts put the arrows on their own row without hiding any details.
+
 Wide screens use compact controls and a selection strip above the plot, with separate **Legend** and **How to read** views on the right. Below 960 CSS pixels wide, or below 600 pixels high, a chart-first layout uses **Filters**, **Details**, **Legend**, and **How to read** panels. Only one panel is open at a time; **Done** dismisses it, and Previous/Next stays accessible along the bottom. Tapping a planet opens its details, including available orbital measurements in the size explorer. Tapping Earth/Sun opens its reference values. Nearby taps select the closest visible point within 24 screen pixels; search and browsing remain available for overlapping points.
 
 The explorer uses dynamic viewport height and safe-area padding. The distance plot retains its quarter-circle geometry, compensates SVG label sizes for display scale, and thins crowded distance labels without removing distance bands or data. The size plot recomputes its drawing rectangle from available space while preserving exact log ratios and a centered Earth/Sun origin; its aspect ratio need not be square. Compact size axes label the outer ticks and reference, retaining the intermediate grid. Rotation changes layout without clearing chart state.
 
 Normal chart exploration fits without page scrolling at the tested desktop, tablet, and phone viewport sizes. Long notes, filter panels, and enlarged accessibility text can scroll within their own panels rather than shrinking text or clipping controls. Mobile source attribution and missing-data counts remain available under **How to read**. Escape dismisses an open tooltip first, then an open compact panel, then the explorer. The original landing-page layouts and their scrolling behavior remain available.
+
+Tooltip height limits apply only to the content inside the card, not Fluent's positioning arrow. This prevents the arrow from creating an unnecessary scrollbar; content can still scroll when it genuinely exceeds the available viewport height.
 
 ## Intended capabilities
 

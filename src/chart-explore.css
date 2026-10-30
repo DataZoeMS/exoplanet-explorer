@@ -25,20 +25,7 @@
 .chart-explore[data-active="true"] .comparison-zoom-toolbar > p { flex: 1 1 180px; font-size: 12px; }
 .chart-explore[data-active="true"] .distance-body { flex: 1; min-height: 0; grid-template-columns: minmax(0, 1fr) 310px; }
 .chart-explore[data-active="true"] .distance-figure { display: flex; flex-direction: column; min-height: 0; padding: 8px 12px; }
-.chart-explore[data-active="true"] .distance-figure > .distance-inspector { flex: none; padding: 8px 12px; margin: 0 0 4px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; max-height: 150px; overflow: auto; }
-.chart-explore[data-active="true"] .distance-inspector > .eyebrow { grid-column: 1 / -1; font-size: 11px; }
-.chart-explore[data-active="true"] .distance-inspector > [aria-live] { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 20px; }
-.chart-explore[data-active="true"] .distance-inspector h3 { font-size: 18px; margin: 0; }
-.chart-explore[data-active="true"] .distance-inspector dl { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; }
-.chart-explore[data-active="true"] .distance-inspector dt { font-size: 12px; margin: 0; }
-.chart-explore[data-active="true"] .distance-inspector dd { font-size: 18px; }
-.chart-explore[data-active="true"] .distance-inspector dd span { font-size: 12px; }
-.chart-explore[data-active="true"] .distance-inspector .comparison-host { margin: 0; font-size: 12px; }
-.chart-explore[data-active="true"] .comparison-category { border: 0; margin: 0; padding: 0; font-size: 12px; }
-.chart-explore[data-active="true"] .distance-inspector .distance-source-links { gap: 8px 16px; }
-.chart-explore[data-active="true"] .distance-inspector .text-link { font-size: 13px; }
-.chart-explore[data-active="true"] .distance-browse { margin: 0; gap: 8px; align-self: center; }
-.chart-explore[data-active="true"] .distance-browse-note { grid-column: 1 / -1; margin: 0; font-size: 12px; }
+.chart-explore[data-active="true"] .distance-figure > .distance-inspector { flex: none; max-height: 150px; overflow: auto; }
 .chart-explore[data-active="true"] .distance-count { flex: none; font-size: 12px; margin: 4px 0; }
 .chart-explore[data-active="true"] .distance-stage { flex: 1; min-height: 0; overflow: hidden; }
 .chart-explore[data-active="true"] .distance-svg, .chart-explore[data-active="true"] .comparison-svg { width: 100%; height: 100%; min-width: 0; max-width: none; }
@@ -63,7 +50,7 @@
 .explore-reference { bottom: 0; height: min(60dvh, 520px); overflow: auto; border-left: 1px solid var(--cp-border); }
 .explore-reference dl { display: grid; gap: 16px; }
 .explore-reference dd { margin: 4px 0 0; font-weight: 600; }
-.chart-explore[data-active="true"] .planet-hover-card { max-height: calc(100dvh - 40px); overflow: auto; }
+.chart-explore[data-active="true"] .planet-hover-body { max-height: calc(100dvh - 82px); overflow: auto; }
 
 @media (max-width: 959px), (max-height: 599px) {
   .explore-header { flex-wrap: wrap; gap: 4px; padding: 4px 8px; }
