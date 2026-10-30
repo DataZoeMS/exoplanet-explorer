@@ -16,6 +16,17 @@ export const comparisonChart = {
   originX: 406, originY: 338,
 };
 
+export function comparisonViewport(width: number, height: number): typeof comparisonChart {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 120 || height <= 120) {
+    throw new RangeError('Comparison viewport must leave room for axes.');
+  }
+  const left = 72;
+  const right = width - 24;
+  const top = 32;
+  const bottom = height - 60;
+  return { width, height, left, right, top, bottom, originX: (left + right) / 2, originY: (top + bottom) / 2 };
+}
+
 export const quadrantLabels = {
   'smaller-star-larger-planet': 'Smaller star / larger planet',
   'larger-star-larger-planet': 'Larger star / larger planet',
@@ -98,13 +109,12 @@ export function comparisonTicks(extent: number): number[] {
   return Array.from({ length: count * 2 + 1 }, (_, index) => (index - count) * step);
 }
 
-export function comparisonPosition(entry: Radii, bounds: ComparisonBounds) {
+export function comparisonPosition(entry: Radii, bounds: ComparisonBounds, chart = comparisonChart) {
   if (!inComparisonView(entry, bounds)) {
     throw new RangeError('Planet-host pair is outside the comparison bounds.');
   }
   const star = Math.log2(entry.starRadiusSun);
   const planet = Math.log2(entry.radiusEarth);
-  const chart = comparisonChart;
   return {
     x: chart.originX + star / bounds.star * (chart.right - chart.originX),
     y: chart.originY - planet / bounds.planet * (chart.originY - chart.top),

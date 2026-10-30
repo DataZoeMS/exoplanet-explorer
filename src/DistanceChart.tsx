@@ -3,6 +3,8 @@ import { Button, Input, Select, Tooltip } from '@fluentui/react-components';
 import { ArrowLeftRegular, ArrowRightRegular, ArrowUpRightRegular, SearchRegular } from '@fluentui/react-icons';
 import { chart, distanceBands, distanceLimit, distanceRadius, markerRadius, planetPosition, quarterArc, radiusBounds, type PlotPlanet } from './distance-scale';
 import { usePlanetTooltip } from './usePlanetTooltip';
+import { ChartExplore, useChartExplore } from './ChartExplore';
+import { spacedTicks } from './explore-scale';
 import './distance-chart.css';
 
 const number = new Intl.NumberFormat('en-US');
@@ -22,6 +24,7 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
   const [range, setRange] = useState('all');
   const [selectedName, setSelectedName] = useState('TRAPPIST-1 e');
   const { hovered, cancelHide, dismissTooltip, scheduleHide, showTooltip } = usePlanetTooltip<CatalogPlanet>();
+  const explore = useChartExplore(dismissTooltip, chart.width, chart.height);
   const fullLimit = useMemo(() => distanceLimit(Math.max(1, ...planets.map(planet => planet.distanceLy))), [planets]);
   const sizeBounds = useMemo(() => radiusBounds(planets), [planets]);
   const limit = range === 'all' ? fullLimit : Number(range);
@@ -36,6 +39,9 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
     .sort((a, b) => b.radius - a.radius) : [], [visible, limit, sizeBounds]);
   const selectedPosition = selected && sizeBounds ? planetPosition(selected, limit, sizeBounds) : null;
   const bands = distanceBands(limit);
+  const labeledBands = explore.active
+    ? spacedTicks(bands, distance => distanceRadius(distance, limit) * explore.scale, 56)
+    : bands;
   const excluded = totalPlanets - planets.length;
 
   function step(direction: number) {
@@ -55,9 +61,16 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
       <div className="section-heading">
         <div><p className="eyebrow">A SENSE OF DISTANCE</p><h2 id="distance-title">How far is another world?</h2>
           <p>Start at Earth. Follow the distance bands out into our galactic neighborhood.</p></div>
-        <a className="text-link" href="#distance-notes">How to read this chart <ArrowRightRegular aria-hidden="true" /></a>
+        <div className="chart-heading-actions">
+          <Button appearance="primary" onClick={explore.open}>Expand distance chart</Button>
+          <a className="text-link" href="#distance-notes">How to read this chart <ArrowRightRegular aria-hidden="true" /></a>
+        </div>
       </div>
+      <ChartExplore explore={explore} id="distance" title="Distance explorer"
+        selected={selected?.name ?? 'No matching worlds'} canBrowse={visible.length > 1}
+        onPrevious={() => step(-1)} onNext={() => step(1)}>
       <div className="distance-panel">
+        <div className="explore-filters">
         <div className="distance-toolbar">
           <div className="distance-search">
             <label htmlFor="planet-search">Find a planet</label>
@@ -74,6 +87,7 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
             </Select>
           </div>
           <Button appearance="subtle" onClick={reset}>Reset view</Button>
+        </div>
         </div>
         <div className="distance-body">
           <figure className="distance-figure">
@@ -99,9 +113,10 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
               </div>
               <p className="distance-browse-note">Browse in order of distance. Search and these buttons work without using the plot.</p>
             </div>
-            <p className="distance-count" role="status">{number.format(visible.length)} of {number.format(planets.length)} plottable planets <span>/</span> log distance scale</p>
+            <p className="distance-count" role="status">{number.format(visible.length)} of {number.format(planets.length)} plottable planets <span>/</span> {explore.active ? 'distance from Earth (ly), log scale' : 'log distance scale'}</p>
             <p className="distance-scroll-hint">Scroll the plot sideways to see every distance band.</p>
             <Tooltip visible={hovered !== null} relationship="description" withArrow hideDelay={200}
+              mountNode={explore.active ? explore.dialogRef.current : undefined}
               positioning={{ target: hovered?.target, position: 'above', align: 'center', offset: 12 }}
               onVisibleChange={(_, state) => { if (!state.visible) dismissTooltip(); }}
               content={{
@@ -118,11 +133,13 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
                   <p className="planet-hover-note">Radius may be measured or estimated.<br />Select the dot for NASA Science and archive links.</p>
                 </>,
               }}>
-            <div className="distance-stage" tabIndex={0} role="region" aria-label="Scrollable exoplanet distance chart"
+            <div ref={explore.stageRef} className="distance-stage" tabIndex={0} role="region" aria-label="Exoplanet distance chart"
               aria-describedby="distance-notes distance-planet-tooltip"
               onFocus={event => { if (event.target === event.currentTarget && selected) showTooltip(selected, event.currentTarget); }}
               onBlur={dismissTooltip}>
-              <svg className="distance-svg" viewBox={`0 0 ${chart.width} ${chart.height}`} role="img" aria-labelledby="plot-title plot-description">
+              <svg className="distance-svg" viewBox={explore.active ? `-24 0 ${chart.width + 24} ${chart.height}` : `0 0 ${chart.width} ${chart.height}`} role="img" aria-labelledby="plot-title plot-description"
+                onPointerDown={explore.startTouch} onPointerMove={explore.moveTouch} onPointerCancel={explore.cancelTouch}
+                onPointerUp={event => explore.selectNearTouch(event, positions, point => setSelectedName(point.planet.name))}>
                 <title id="plot-title">Exoplanet distances from Earth, in a quarter circle</title>
                 <desc id="plot-description">Earth is at the lower-left origin. Arcs mark distances in light-years on a logarithmic scale. Circle area is proportional to catalog planet radius. Angle uses log radius: smallest planets near the left vertical axis, largest near the bottom horizontal axis. This is not sky position. Search and Previous or Next controls provide access to every plotted planet.</desc>
                 <path className="distance-wedge" d={`M ${chart.originX} ${chart.originY} L ${chart.originX + chart.radius} ${chart.originY} A ${chart.radius} ${chart.radius} 0 0 0 ${chart.originX} ${chart.originY - chart.radius} Z`} />
@@ -133,9 +150,13 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
                 <g className="distance-points">
                   {positions.map(({ planet, x, y, radius }) => (
                     <circle className="distance-point" key={planet.name} cx={x} cy={y} r={radius}
-                      data-name={planet.name} onPointerEnter={event => showTooltip(planet, event.currentTarget)}
+                      data-name={planet.name} onPointerEnter={event => { if (event.pointerType !== 'touch') showTooltip(planet, event.currentTarget); }}
                       onPointerLeave={scheduleHide}
-                      onClick={event => { setSelectedName(planet.name); showTooltip(planet, event.currentTarget); }} />
+                      onClick={event => {
+                        setSelectedName(planet.name);
+                        if (explore.active && explore.compact) explore.showPanel('details');
+                        else showTooltip(planet, event.currentTarget);
+                      }} />
                   ))}
                 </g>
                 {selected && selectedPosition && <g className="distance-selected" pointerEvents="none">
@@ -144,27 +165,30 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
                   <circle className="selection-point" cx={selectedPosition.x} cy={selectedPosition.y} r={selectedPosition.radius} />
                 </g>}
                 <g className="distance-axis-labels">
-                  {bands.map(distance => <g key={distance}>
+                  {labeledBands.map(distance => <g key={distance}>
                     <text x={chart.originX + distanceRadius(distance, limit)} y={chart.originY + 27} textAnchor="middle">{compact.format(distance)} ly</text>
                     {distance >= 10 && <text x={chart.originX - 12} y={chart.originY - distanceRadius(distance, limit) + 4} textAnchor="end">{compact.format(distance)}</text>}
                   </g>)}
-                  <text x={chart.originX + chart.radius / 2} y={chart.originY + 62} textAnchor="middle">DISTANCE FROM EARTH / LIGHT-YEARS</text>
+                  {!explore.active && <text x={chart.originX + chart.radius / 2} y={chart.originY + 62} textAnchor="middle">DISTANCE FROM EARTH / LIGHT-YEARS</text>}
                 </g>
                 <g className="distance-size-axis">
-                  <text x="14" y="430" textAnchor="middle" transform="rotate(-90 14 430)">SMALLER PLANETS</text>
-                  <text x={chart.originX + chart.radius - 16} y={chart.originY + 48} textAnchor="end">LARGER PLANETS</text>
+                  <text x={explore.active ? chart.originX + 8 : 14} y={explore.active ? chart.originY - chart.radius - 20 : 430}
+                    textAnchor={explore.active ? 'start' : 'middle'} transform={explore.active ? undefined : 'rotate(-90 14 430)'}>{explore.active ? 'SMALLER' : 'SMALLER PLANETS'}</text>
+                  <text x={chart.originX + chart.radius - 16} y={explore.active ? chart.originY - 16 : chart.originY + 48} textAnchor="end">{explore.active ? 'LARGER' : 'LARGER PLANETS'}</text>
                 </g>
                 <g className="earth-origin">
                   <circle className="earth-halo" cx={chart.originX} cy={chart.originY} r={12} />
                   <circle cx={chart.originX} cy={chart.originY} r={markerRadius(1)} />
-                  <text x={chart.originX - 16} y={chart.originY + 29} textAnchor="end">EARTH</text>
-                  <text x={chart.originX - 16} y={chart.originY + 45} textAnchor="end" className="earth-zero">0 ly</text>
+                  <text x={explore.active ? chart.originX + 16 : chart.originX - 16} y={explore.active ? chart.originY - 20 : chart.originY + 29} textAnchor={explore.active ? 'start' : 'end'}>{explore.active ? 'Earth (0 ly)' : 'EARTH'}</text>
+                  {!explore.active && <text x={chart.originX - 16} y={chart.originY + 45} textAnchor="end" className="earth-zero">0 ly</text>}
                 </g>
                 {!selected && <text className="distance-empty-label" x={chart.width / 2} y={chart.height / 2} textAnchor="middle">No matching planets</text>}
               </svg>
             </div>
             </Tooltip>
-            <figcaption className="distance-caption">Hover a dot for a quick look, or select it to keep its details in the panel. Focus the plot to preview the selected planet; press Escape to dismiss the tooltip.</figcaption>
+            <figcaption className="distance-caption">{explore.active && explore.compact
+              ? 'Tap a dot for details. Use Filters to search or change the distance range.'
+              : 'Hover a dot for a quick look, or select it to keep its details in the panel. Focus the plot to preview the selected planet; press Escape to dismiss the tooltip.'}</figcaption>
           </figure>
 
           <aside className="distance-sidebar" aria-label="Chart legend and reading notes">
@@ -196,6 +220,7 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
               <p>Arcs mark equal distances from Earth. The radial scale uses log(1 + distance in light-years), so nearby and distant worlds can share a view. Angle uses log catalog radius: smaller planets toward the left axis and larger planets toward the bottom axis. The size-angle scale stays fixed when filtering.</p>
               <p>Angles do not represent sky directions, and separation between dots is not the distance between planets. Marker sizes are exaggerated relative to distances.</p>
               <p>Catalog radii may be measured or estimated. See NASA records for uncertainties and methods. Dots can overlap; this is not a map of the true density of planets.</p>
+              <p className="explore-mobile-source">NASA Exoplanet Archive / {date}. {number.format(planets.length)} with distance + radius; {number.format(excluded)} omitted for missing measurements. No missing values are treated as zero.</p>
             </div>
           </aside>
         </div>
@@ -204,6 +229,7 @@ export function DistanceChart({ planets, totalPlanets, date }: Props) {
           <span>{number.format(planets.length)} with distance + radius; {number.format(excluded)} omitted because distance or radius is unavailable. No missing values are treated as zero.</span>
         </div>
       </div>
+      </ChartExplore>
     </section>
   );
 }

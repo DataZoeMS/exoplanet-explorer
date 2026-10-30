@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Input, Select, Tooltip } from '@fluentui/react-components';
 import { AddRegular, ArrowLeftRegular, ArrowRightRegular, ArrowUpRightRegular, SearchRegular, SubtractRegular } from '@fluentui/react-icons';
 import {
-  comparisonBounds, comparisonChart as chart, comparisonPosition, comparisonTicks,
+  comparisonBounds, comparisonChart as fullChart, comparisonPosition, comparisonTicks, comparisonViewport,
   comparisonZoomFactor, comparisonZoomMax, changeComparisonZoom, inComparisonView, zoomComparisonBounds,
   quadrantFor, quadrantLabels, type ComparisonAxis, type ComparisonPlanet, type ComparisonZoom, type Quadrant,
 } from './comparison-scale';
 import { usePlanetTooltip } from './usePlanetTooltip';
+import { ChartExplore, useChartExplore } from './ChartExplore';
 import './comparison-chart.css';
 
 type CatalogPlanet = ComparisonPlanet & {
@@ -24,11 +25,11 @@ const decimal = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 3 });
 const tickLabel = (exponent: number) => exponent < 0
   && Number.isInteger(exponent) ? `1/${2 ** -exponent}\u00d7` : `${decimal.format(2 ** exponent)}\u00d7`;
 
-const quadrants: { key: Quadrant; x: number; y: number; star: string; planet: string }[] = [
-  { key: 'smaller-star-larger-planet', x: chart.left, y: chart.top, star: 'SMALLER STAR', planet: 'LARGER PLANET' },
-  { key: 'larger-star-larger-planet', x: chart.originX, y: chart.top, star: 'LARGER STAR', planet: 'LARGER PLANET' },
-  { key: 'smaller-star-smaller-planet', x: chart.left, y: chart.originY, star: 'SMALLER STAR', planet: 'SMALLER PLANET' },
-  { key: 'larger-star-smaller-planet', x: chart.originX, y: chart.originY, star: 'LARGER STAR', planet: 'SMALLER PLANET' },
+const quadrantDescriptions: { key: Quadrant; star: string; planet: string }[] = [
+  { key: 'smaller-star-larger-planet', star: 'SMALLER STAR', planet: 'LARGER PLANET' },
+  { key: 'larger-star-larger-planet', star: 'LARGER STAR', planet: 'LARGER PLANET' },
+  { key: 'smaller-star-smaller-planet', star: 'SMALLER STAR', planet: 'SMALLER PLANET' },
+  { key: 'larger-star-smaller-planet', star: 'LARGER STAR', planet: 'SMALLER PLANET' },
 ];
 
 export function ComparisonChart({ planets, totalPlanets, date }: Props) {
@@ -39,6 +40,13 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const wheelDelta = useRef({ star: 0, planet: 0 });
   const { hovered, cancelHide, dismissTooltip, scheduleHide, showTooltip } = usePlanetTooltip<TooltipPlanet>();
+  const explore = useChartExplore(dismissTooltip, fullChart.width, fullChart.height);
+  const chart = useMemo(() => explore.active
+    ? comparisonViewport(Math.max(240, explore.viewport.width), Math.max(180, explore.viewport.height))
+    : fullChart, [explore.active, explore.viewport]);
+  const quadrants = quadrantDescriptions.map((entry, index) => ({
+    ...entry, x: index % 2 === 0 ? chart.left : chart.originX, y: index < 2 ? chart.top : chart.originY,
+  }));
   const fullBounds = useMemo(() => comparisonBounds(planets), [planets]);
   const bounds = useMemo(() => zoomComparisonBounds(fullBounds, zoom), [fullBounds, zoom]);
   const catalog = useMemo(() => planets.map(planet => ({
@@ -52,11 +60,13 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
   }, [catalog, query, quadrant]);
   const visible = useMemo(() => matching
     .filter(entry => inComparisonView(entry.planet, bounds))
-    .map(entry => ({ ...entry, ...comparisonPosition(entry.planet, bounds) })), [matching, bounds]);
+    .map(entry => ({ ...entry, ...comparisonPosition(entry.planet, bounds, chart) })), [matching, bounds, chart]);
   const selectedIndex = Math.max(0, visible.findIndex(entry => entry.planet.name === selectedName));
   const selected = visible[selectedIndex];
   const xTicks = comparisonTicks(bounds.star);
   const yTicks = comparisonTicks(bounds.planet);
+  const xLabels = explore.active && explore.compact ? xTicks.filter((tick, i) => tick === 0 || i === 0 || i === xTicks.length - 1) : xTicks;
+  const yLabels = explore.active && explore.compact ? yTicks.filter((tick, i) => tick === 0 || i === 0 || i === yTicks.length - 1) : yTicks;
   const xFor = (tick: number) => chart.originX + tick / bounds.star * (chart.right - chart.originX);
   const yFor = (tick: number) => chart.originY - tick / bounds.planet * (chart.originY - chart.top);
 
@@ -118,9 +128,16 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
       <div className="section-heading">
         <div><p className="eyebrow">OUR SOLAR SYSTEM AS THE YARDSTICK</p><h2 id="comparison-title">How do they compare to home?</h2>
           <p>Compare a planet and its host star to Earth and the Sun. Our reference sits at the center.</p></div>
-        <a className="text-link" href="#comparison-notes">How to read this chart <ArrowRightRegular aria-hidden="true" /></a>
+        <div className="chart-heading-actions">
+          <Button appearance="primary" onClick={explore.open}>Expand size chart</Button>
+          <a className="text-link" href="#comparison-notes">How to read this chart <ArrowRightRegular aria-hidden="true" /></a>
+        </div>
       </div>
+      <ChartExplore explore={explore} id="comparison" title="Size explorer"
+        selected={selected?.planet.name ?? 'No systems in view'} canBrowse={visible.length > 1}
+        onPrevious={() => step(-1)} onNext={() => step(1)}>
       <div className="distance-panel">
+        <div className="explore-filters">
         <div className="distance-toolbar">
           <div className="distance-search">
             <label htmlFor="comparison-search">Find a planet or host star</label>
@@ -158,6 +175,7 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
           <Button appearance="subtle" onClick={resetAxes} disabled={zoom.star === 0 && zoom.planet === 0}>Reset axes</Button>
           <p>Scroll over the bottom axis to zoom x, or the left axis to zoom y. Earth/Sun stays centered.</p>
         </div>
+        </div>
         <div className="distance-body">
           <figure className="distance-figure">
             <div className="distance-inspector">
@@ -170,6 +188,8 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                   <dl>
                     <div><dt>Host star radius</dt><dd>{decimal.format(selected.planet.starRadiusSun)} <span>Sun radii</span></dd></div>
                     <div><dt>Planet radius</dt><dd>{decimal.format(selected.planet.radiusEarth)} <span>Earth radii</span></dd></div>
+                    <div className="explore-orbit"><dt>Orbital radius</dt><dd>{selected.planet.orbitalRadiusAu === null ? 'Not available' : decimal.format(selected.planet.orbitalRadiusAu)} <span>AU (semi-major axis)</span></dd></div>
+                    <div className="explore-orbit"><dt>Orbital period</dt><dd>{selected.planet.orbitalPeriodDays === null ? 'Not available' : decimal.format(selected.planet.orbitalPeriodDays)} <span>days</span></dd></div>
                   </dl>
                   <p className="comparison-category">{quadrantLabels[selected.quadrant]}</p>
                   <div className="distance-source-links">
@@ -189,6 +209,7 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
             <p className="distance-count" role="status">{number.format(visible.length)} in view / {number.format(matching.length)} matching / {number.format(planets.length)} comparable planets <span>/</span> independent axis zoom</p>
             <p className="comparison-scroll-hint">Scroll the plot sideways to see every quadrant.</p>
             <Tooltip visible={hovered !== null} relationship="description" withArrow hideDelay={200}
+              mountNode={explore.active ? explore.dialogRef.current : undefined}
               positioning={{ target: hovered?.target, position: 'above', align: 'center', offset: 12 }}
               onVisibleChange={(_, state) => { if (!state.visible) dismissTooltip(); }}
               content={{
@@ -215,11 +236,13 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                     : <>{quadrantLabels[quadrantFor(hovered.planet)]}.<br />Catalog radii may be measured or estimated. Select the dot for NASA links.</>}</p>
                 </>,
               }}>
-              <div className="distance-stage comparison-stage" tabIndex={0} role="region" aria-label="Scrollable Earth and Sun size comparison"
+              <div ref={explore.stageRef} className="distance-stage comparison-stage" tabIndex={0} role="region" aria-label="Earth and Sun size comparison"
                 aria-describedby="comparison-notes comparison-planet-tooltip"
                 onFocus={event => { if (event.target === event.currentTarget && selected) showTooltip(selected.planet, event.currentTarget); }}
                 onBlur={dismissTooltip}>
-                <svg ref={svgRef} className="comparison-svg" viewBox={`0 0 ${chart.width} ${chart.height}`} role="img" aria-labelledby="comparison-plot-title comparison-plot-description">
+                <svg ref={svgRef} className="comparison-svg" viewBox={`0 0 ${chart.width} ${chart.height}`} role="img" aria-labelledby="comparison-plot-title comparison-plot-description"
+                  onPointerDown={explore.startTouch} onPointerMove={explore.moveTouch} onPointerCancel={explore.cancelTouch}
+                  onPointerUp={event => explore.selectNearTouch(event, visible, point => setSelectedName(point.planet.name))}>
                   <title id="comparison-plot-title">Planet and host-star radii relative to Earth and the Sun</title>
                   <desc id="comparison-plot-description">The horizontal axis is stellar radius in Sun radii; the vertical axis is planetary radius in Earth radii. Both use logarithmic ratios. The axes cross at one Sun radius and one Earth radius, not at zero physical size. Larger stars are right, smaller stars left; larger planets above, smaller planets below. Scroll over either axis to zoom it independently, or use the labeled zoom controls. Search, quadrant filters, and Previous or Next provide access to planets in the current view.</desc>
                   {quadrants.map(item => <rect key={item.key} className="comparison-quadrant comparison-color" data-quadrant={item.key}
@@ -236,8 +259,12 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                   <g className="comparison-points">
                     {visible.map(entry => <circle key={entry.planet.name} className="comparison-point comparison-color" data-name={entry.planet.name} data-quadrant={entry.quadrant}
                       cx={entry.x} cy={entry.y} r="3.3"
-                      onPointerEnter={event => showTooltip(entry.planet, event.currentTarget)} onPointerLeave={scheduleHide}
-                      onClick={event => { setSelectedName(entry.planet.name); showTooltip(entry.planet, event.currentTarget); }} />)}
+                      onPointerEnter={event => { if (event.pointerType !== 'touch') showTooltip(entry.planet, event.currentTarget); }} onPointerLeave={scheduleHide}
+                      onClick={event => {
+                        setSelectedName(entry.planet.name);
+                        if (explore.active && explore.compact) explore.showPanel('details');
+                        else showTooltip(entry.planet, event.currentTarget);
+                      }} />)}
                   </g>
                   {selected && <g className="comparison-selected" pointerEvents="none">
                     <line x1={selected.x} y1={chart.originY} x2={selected.x} y2={selected.y} />
@@ -247,43 +274,57 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
                   </g>}
                   <g className="comparison-quadrant-labels" pointerEvents="none">
                     {quadrants.map(item => <text key={item.key} x={item.x + 14} y={item.y === chart.top ? chart.top + 24 : chart.bottom - 34}>
-                      <tspan x={item.x + 14}>{item.star}</tspan><tspan x={item.x + 14} dy="16">{item.planet}</tspan>
+                      <tspan x={item.x + 14}>{explore.active ? item.star === 'SMALLER STAR' ? 'Smaller star' : 'Larger star' : item.star}</tspan>
+                      <tspan x={item.x + 14} dy={explore.active ? '1.3em' : '16'}>{explore.active ? item.planet === 'SMALLER PLANET' ? 'Smaller planet' : 'Larger planet' : item.planet}</tspan>
                     </text>)}
                   </g>
                   <g className="comparison-axis-labels">
                     <g className="comparison-axis-zoom" data-zoom-axis="star">
                       <title>Scroll up to zoom in on star radius; scroll down to zoom out.</title>
                       <rect className="comparison-axis-hit" x={chart.left} y={chart.bottom + 2} width={chart.right - chart.left} height={chart.height - chart.bottom - 2} />
-                      {xTicks.map(tick => <text key={`x${tick}`} x={xFor(tick)} y={chart.bottom + 25} textAnchor="middle">{tickLabel(tick)}</text>)}
-                      <text className="comparison-axis-title" x={chart.originX} y={chart.height - 24} textAnchor="middle">HOST STAR RADIUS / SUN RADIUS</text>
+                      {xLabels.map(tick => <text key={`x${tick}`} x={xFor(tick)} y={chart.bottom + 25} textAnchor="middle">{tickLabel(tick)}</text>)}
+                      <text className="comparison-axis-title" x={chart.originX} y={chart.height - 24} textAnchor="middle">{explore.active ? 'STAR / SUN RADIUS' : 'HOST STAR RADIUS / SUN RADIUS'}</text>
                     </g>
                     <g className="comparison-axis-zoom" data-zoom-axis="planet">
                       <title>Scroll up to zoom in on planet radius; scroll down to zoom out.</title>
                       <rect className="comparison-axis-hit" x="0" y={chart.top} width={chart.left - 2} height={chart.bottom - chart.top} />
-                      {yTicks.map(tick => <text key={`y${tick}`} x={chart.left - 10} y={yFor(tick) + 4} textAnchor="end">{tickLabel(tick)}</text>)}
-                      <text className="comparison-axis-title" x="20" y={chart.originY} textAnchor="middle" transform={`rotate(-90 20 ${chart.originY})`}>PLANET RADIUS / EARTH RADIUS</text>
+                      {yLabels.map(tick => <text key={`y${tick}`} x={chart.left - 10} y={yFor(tick) + 4} textAnchor="end">{tickLabel(tick)}</text>)}
+                      <text className="comparison-axis-title" x="20" y={chart.originY} textAnchor="middle" transform={`rotate(-90 20 ${chart.originY})`}>{explore.active ? 'PLANET / EARTH RADIUS' : 'PLANET RADIUS / EARTH RADIUS'}</text>
                     </g>
                   </g>
                   <g className="comparison-earth" pointerEvents="none">
-                    <g className="comparison-earth-marker" pointerEvents="all" tabIndex={0} role="img"
+                    <g className="comparison-earth-marker" pointerEvents="all" tabIndex={0} role={explore.active ? 'button' : 'img'}
                       aria-label="Earth and Sun reference" aria-describedby="comparison-planet-tooltip"
-                      onPointerEnter={event => showTooltip(earthSunReference, event.currentTarget)} onPointerLeave={scheduleHide}
+                      onPointerEnter={event => { if (event.pointerType !== 'touch') showTooltip(earthSunReference, event.currentTarget); }} onPointerLeave={scheduleHide}
+                      onClick={event => {
+                        if (explore.active) explore.showPanel('reference');
+                        else showTooltip(earthSunReference, event.currentTarget);
+                      }}
+                      onKeyDown={event => {
+                        if (explore.active && (event.key === 'Enter' || event.key === ' ')) {
+                          event.preventDefault();
+                          explore.showPanel('reference');
+                        }
+                      }}
                       onFocus={event => showTooltip(earthSunReference, event.currentTarget)} onBlur={dismissTooltip}>
                       <circle className="comparison-reference-hit" cx={chart.originX} cy={chart.originY} r="16" />
                       <circle className="selection-halo" cx={chart.originX} cy={chart.originY} r="11" />
                       <path d={`M ${chart.originX} ${chart.originY - 6} l 6 6 -6 6 -6 -6 Z`} />
                     </g>
-                    <text x={chart.originX + 16} y={chart.originY + 27}>EARTH / SUN (1&times;, 1&times;)</text>
+                    <text x={chart.originX + 16} y={chart.originY + 27}>EARTH / SUN{!explore.active && ' (1\u00d7, 1\u00d7)'}</text>
                   </g>
                   {/* Keep selection visible when a pair overlaps the Earth/Sun marker. */}
                   {selected && <circle className="comparison-selection-ring" cx={selected.x} cy={selected.y} r="10" pointerEvents="none" />}
                   {!selected && <text className="distance-empty-label comparison-empty" x={chart.originX} y={chart.originY + 70} textAnchor="middle">
-                    {matching.length ? 'No pairs in this zoom range. Reset axes to see them.' : 'No matching planet-host pairs'}
+                    {explore.active ? matching.length ? 'No pairs in view' : 'No matching systems'
+                      : matching.length ? 'No pairs in this zoom range. Reset axes to see them.' : 'No matching planet-host pairs'}
                   </text>}
                 </svg>
               </div>
             </Tooltip>
-            <figcaption className="distance-caption">Hover a dot for size and orbit details. Focus the plot to preview the selected planet, or focus Earth/Sun for our reference values; press Escape to dismiss.</figcaption>
+            <figcaption className="distance-caption">{explore.active && explore.compact
+              ? 'Tap a dot or Earth/Sun for details. Use Filters for search and axis zoom.'
+              : 'Hover a dot for size and orbit details. Focus the plot to preview the selected planet, or focus Earth/Sun for our reference values; press Escape to dismiss.'}</figcaption>
           </figure>
           <aside className="distance-sidebar" aria-label="Size comparison legend and chart notes">
             <div className="distance-legend" role="group" aria-labelledby="comparison-legend-title">
@@ -304,6 +345,7 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
               <p>Zoom hides pairs outside the displayed radii without clamping them to the edge. Reset axes restores the full catalog range and preserves search and filters; Reset view also clears search and filters.</p>
               <p>Each dot is one confirmed planet paired with its catalog host star, not a whole system's extent. Multiple planets can share a host. For multiple-star systems, we use the reported stellar radius, not a combined radius.</p>
               <p>Radii may be measured or estimated, and composite values can come from different studies. Overlapping dots do not show every pair separately; use search or browsing to inspect them.</p>
+              <p className="explore-mobile-source">NASA Exoplanet Archive / {date}. {number.format(planets.length)} with star + planet radii; {number.format(totalPlanets - planets.length)} omitted for missing radii. No missing values are treated as zero.</p>
             </div>
           </aside>
         </div>
@@ -312,6 +354,7 @@ export function ComparisonChart({ planets, totalPlanets, date }: Props) {
           <span>{number.format(planets.length)} with star + planet radii; {number.format(totalPlanets - planets.length)} omitted for missing radii. No missing values are treated as zero.</span>
         </div>
       </div>
+      </ChartExplore>
     </section>
   );
 }
