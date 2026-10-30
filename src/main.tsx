@@ -243,7 +243,7 @@ function App() {
         <section className="closing page-width"><span className="logo-orbit" aria-hidden="true" /><p>The universe is vast.<br /><em>Stay curious.</em></p><a className="text-link" href="#main">Back to the stars <span aria-hidden="true">&uarr;</span></a></section>
       </main>
       <footer className="site-footer page-width">
-        <div><a className="footer-brand" href="#">exoplanet explorer</a><p>An independent exploration of NASA's open science.<br />Not affiliated with or endorsed by NASA.</p></div>
+        <div><a className="footer-brand" href="#">exoplanet explorer</a><p>An independent exploration of NASA's open science.<br />Not affiliated with or endorsed by NASA.</p><p><a href="https://github.com/DataZoeMS/exoplanet-explorer" target="_blank" rel="noopener noreferrer" title="Opens in a new tab">Source on GitHub <ArrowUpRightRegular aria-hidden="true" /></a></p></div>
         <div className="footer-data"><a href={archive} target="_blank" rel="noopener noreferrer" title="Opens in a new tab">NASA Exoplanet Archive <ArrowUpRightRegular aria-hidden="true" /></a><p>Composite catalog snapshot, not live data. Confirmed planets only.<br /><time dateTime={data.retrievedAt}>Retrieved {date} (UTC)</time>. <a href="https://exoplanetarchive.ipac.caltech.edu/docs/acknowledge.html" target="_blank" rel="noopener noreferrer" title="Opens in a new tab">Data attribution</a></p></div>
       </footer>
 
